@@ -26,6 +26,7 @@
       overflow: hidden;
     }
 
+    /* 頂部導航 */
     header {
       position: absolute;
       top: 0; left: 0; right: 0;
@@ -50,7 +51,7 @@
     .brand-title span { font-size: 11px; font-weight: normal; color: var(--muted); }
     .top-center-tabs {
       display: flex;
-      background: rgba(30,31,38,0.85);
+      background: rgba(30,31,38,0.9);
       backdrop-filter: blur(8px);
       padding: 3px;
       border-radius: 20px;
@@ -70,6 +71,7 @@
     }
     .top-tab.active { background: #fff; color: #111; }
 
+    /* 側邊主面板 */
     aside {
       width: 380px;
       height: 100vh;
@@ -106,7 +108,7 @@
       padding: 18px;
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 16px;
     }
     .panel-scroll::-webkit-scrollbar { width: 4px; }
     .panel-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
@@ -218,6 +220,7 @@
     .chip.active { border-color: var(--accent); color: var(--accent); font-weight: 600; }
     .chip .del { font-weight: bold; cursor: pointer; color: #ff5252; margin-left: 2px; }
 
+    /* 主舞台 */
     main {
       flex: 1;
       position: relative;
@@ -230,11 +233,12 @@
     #viewport3d { width: 100%; height: 100%; position: absolute; inset: 0; }
     #canvas2d, #canvasDie {
       position: absolute;
-      box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+      inset: 0;
+      width: 100%;
+      height: 100%;
       display: none;
-      cursor: grab;
+      cursor: default;
     }
-    #canvas2d:active, #canvasDie:active { cursor: grabbing; }
 
     .bottom-bar {
       position: absolute;
@@ -304,11 +308,11 @@
     </div>
 
     <div class="panel-scroll" id="stepPanels">
-      <!-- 步驟 1: 品項管理與尺寸 -->
+      <!-- 步驟 1: 品項與尺寸 -->
       <div id="step-0" class="step-content">
         <div class="sec-h">
           <span>畫面上的產品列表</span>
-          <span style="font-size:10px; color:var(--accent);">點擊選取／✕ 刪除</span>
+          <span style="font-size:10px; color:var(--accent);">點選切換／✕ 刪除</span>
         </div>
         <div class="product-list-chips" id="productChips"></div>
 
@@ -331,7 +335,7 @@
           <input type="number" id="dimH" oninput="applyCurrentSettings()">
         </div>
         <div class="form-row" id="rowSpine">
-          <label>書背厚度 (Spine)</label>
+          <label>厚度 / 書背 (Spine)</label>
           <input type="number" id="dimSpine" oninput="applyCurrentSettings()">
         </div>
         <div class="form-row" id="rowRadius">
@@ -342,16 +346,16 @@
 
       <!-- 步驟 2: 材質工藝 -->
       <div id="step-1" class="step-content" style="display:none;">
-        <div class="sec-h">紙張材質紋理</div>
+        <div class="sec-h">紙張材質紋理預設</div>
         <div class="grid-3" style="margin-bottom: 14px;">
-          <button class="pill-btn" onclick="setPaper('coated')">銅版紙</button>
-          <button class="pill-btn" onclick="setPaper('matte')">雪銅紙</button>
-          <button class="pill-btn" onclick="setPaper('kraft')">牛皮紙</button>
-          <button class="pill-btn" onclick="setPaper('holotech')">雷射金屬</button>
-          <button class="pill-btn" onclick="setPaper('pearl')">珠光紙</button>
-          <button class="pill-btn" onclick="setPaper('clear')">透明壓克力</button>
+          <button class="pill-btn active" id="btn_mat_coated" onclick="setPaper('coated')">銅版紙</button>
+          <button class="pill-btn" id="btn_mat_matte" onclick="setPaper('matte')">雪銅紙</button>
+          <button class="pill-btn" id="btn_mat_kraft" onclick="setPaper('kraft')">牛皮紙</button>
+          <button class="pill-btn" id="btn_mat_holotech" onclick="setPaper('holotech')">雷射金屬</button>
+          <button class="pill-btn" id="btn_mat_pearl" onclick="setPaper('pearl')">珠光紙</button>
+          <button class="pill-btn" id="btn_mat_clear" onclick="setPaper('clear')">透明壓克力</button>
         </div>
-        <div class="sec-h">微調參數</div>
+        <div class="sec-h">微調參數 (即時反饋)</div>
         <div class="form-row">
           <label>金屬光澤感</label>
           <input type="range" id="metalness" min="0" max="1" step="0.05" oninput="applyCurrentSettings()">
@@ -362,12 +366,12 @@
         </div>
       </div>
 
-      <!-- 步驟 3: 部件貼圖獨立上傳 -->
+      <!-- 步驟 3: 部件貼圖 -->
       <div id="step-2" class="step-content" style="display:none;">
         <div class="sec-h">所選產品部件貼圖替換</div>
         <div id="uploadBoxContainer"></div>
         <input type="file" id="fileIn" style="display:none;" accept="image/*">
-        <p style="font-size: 11px; color: var(--muted); margin-top: 8px;">* 支援高解析度圖檔；各部件獨立替換，不會整套混亂覆蓋。</p>
+        <p style="font-size: 11px; color: var(--muted); margin-top: 8px;">* 支援高解析 PNG/JPG；各部件獨立生效，展開圖與 3D 雙向同步。</p>
       </div>
 
       <!-- 步驟 4: 光線與場景 -->
@@ -385,22 +389,41 @@
           <label>光源方向旋轉</label>
           <input type="range" id="lightAngle" min="0" max="360" value="45" oninput="updateLighting()">
         </div>
-        <div class="sec-h" style="margin-top: 14px;">背景設定</div>
+        <div class="sec-h" style="margin-top: 14px;">背景環境設定</div>
         <div class="form-row">
           <label>自訂底色</label>
           <input type="color" id="customBgColor" value="#0d0e12" oninput="updateCustomBg(this.value)">
         </div>
         <div class="grid-2">
-          <button class="pill-btn" onclick="setBgPreset('studio')">攝影棚深灰</button>
-          <button class="pill-btn" onclick="setBgPreset('pure_white')">純白背景</button>
-          <button class="pill-btn" onclick="setBgPreset('linen')">棉麻布紋</button>
-          <button class="pill-btn" onclick="setBgPreset('transparent')">透明 (PNG 陰影)</button>
+          <button class="pill-btn active" id="btn_bg_studio" onclick="setBgPreset('studio')">攝影棚深灰</button>
+          <button class="pill-btn" id="btn_bg_pure_white" onclick="setBgPreset('pure_white')">純白背景</button>
+          <button class="pill-btn" id="btn_bg_linen" onclick="setBgPreset('linen')">棉麻布紋</button>
+          <button class="pill-btn" id="btn_bg_transparent" onclick="setBgPreset('transparent')">透明 (PNG 陰影)</button>
         </div>
       </div>
 
-      <!-- 步驟 5: 輸出圖片 -->
+      <!-- 步驟 5: 輸出圖片 & 展開圖出血 -->
       <div id="step-4" class="step-content" style="display:none;">
-        <div class="sec-h">匯出規格</div>
+        <div class="sec-h">展開圖刀模出血設定</div>
+        <div class="form-row">
+          <label>出血尺寸</label>
+          <div style="display:flex; gap:4px; align-items:center;">
+            <input type="number" id="bleedVal" value="3" style="width:55px;" oninput="renderDieCanvas()">
+            <select id="bleedUnit" style="width:55px;" onchange="renderDieCanvas()">
+              <option value="mm">mm</option>
+              <option value="cm">cm</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>出血線位置</label>
+          <select id="bleedPos" onchange="renderDieCanvas()">
+            <option value="outside">產品外部 (外擴出血)</option>
+            <option value="inside">產品內部 (內縮安全線)</option>
+          </select>
+        </div>
+
+        <div class="sec-h" style="margin-top:14px;">匯出圖片規格</div>
         <div class="form-row">
           <label>版面尺寸</label>
           <select id="exportRatio">
@@ -425,8 +448,8 @@
 
   <main id="mainStage">
     <div id="viewport3d"></div>
-    <canvas id="canvas2d" width="1600" height="1200"></canvas>
-    <canvas id="canvasDie" width="1600" height="1200"></canvas>
+    <canvas id="canvas2d"></canvas>
+    <canvas id="canvasDie"></canvas>
 
     <div class="bottom-bar" id="bottomBar">
       <div class="angle-btns">
@@ -444,7 +467,7 @@
   </main>
 
   <script>
-    // --- 幾何與貼圖工具 ---
+    // --- 貼圖生成輔助 ---
     function makeArt(text, sub, bg = '#161c28') {
       const c = document.createElement('canvas');
       c.width = 1024; c.height = 1024;
@@ -515,7 +538,7 @@
       return new THREE.CanvasTexture(c);
     }
 
-    // --- 資料結構 (多產品管理) ---
+    // --- 多產品資料陣列 ---
     let products = [
       {
         id: 'p1',
@@ -523,7 +546,7 @@
         w: 314, h: 314, spine: 6, radius: 0,
         metalness: 0.05, roughness: 0.65,
         pos3D: { x: 0, y: 0, z: 0 },
-        pos2D: { x: 120, y: 150 },
+        pos2D: { x: 200, y: 200 },
         textures: {
           front: makeArt('MIDNIGHT ROUTE', 'LUNA HARBOR', '#161c28'),
           back: makeArt('TRACKLIST', '1. Harbor Lights\n2. Low Tide', '#1e2430'),
@@ -537,7 +560,7 @@
       return products.find(p => p.id === selectedId) || products[0];
     }
 
-    // --- 3D 渲染系統 (Three.js) ---
+    // --- 3D 引擎 (Three.js) ---
     let scene, camera, renderer, controls, studioRoot, groundMesh;
     let keyLight, fillLight, rimLight;
 
@@ -558,9 +581,10 @@
       controls = new THREE.OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
       controls.dampingFactor = 0.05;
-      controls.screenSpacePanning = true; // 修正平移拖曳
+      controls.screenSpacePanning = true; // 支援順暢平移拖曳
       controls.maxPolarAngle = Math.PI / 2 + 0.02;
 
+      // 燈光
       keyLight = new THREE.DirectionalLight(0xfff7ea, 2.0);
       keyLight.position.set(5, 8, 5);
       keyLight.castShadow = true;
@@ -578,7 +602,8 @@
 
       scene.add(new THREE.AmbientLight(0xffffff, 0.45));
 
-      const gGeo = new THREE.PlaneGeometry(50, 50);
+      // 地板接觸陰影
+      const gGeo = new THREE.PlaneGeometry(60, 60);
       const gMat = new THREE.ShadowMaterial({ opacity: 0.45 });
       groundMesh = new THREE.Mesh(gGeo, gMat);
       groundMesh.rotation.x = -Math.PI / 2;
@@ -589,8 +614,8 @@
       studioRoot = new THREE.Group();
       scene.add(studioRoot);
 
-      setCameraAngle('iso');
       buildAll3DModels();
+      setCameraAngle('iso');
       renderLoop();
     }
 
@@ -619,25 +644,22 @@
         });
 
         if (p.type === 'vinyl') {
-          // 黑膠封套本體
-          const boxMatArray = [
-            backMat, backMat, backMat, backMat,
-            frontMat, backMat
-          ];
-          const jacket = new THREE.Mesh(new THREE.BoxGeometry(w, h, spine), boxMatArray);
+          // 黑膠封套
+          const jacketMatArr = [backMat, backMat, backMat, backMat, frontMat, backMat];
+          const jacket = new THREE.Mesh(new THREE.BoxGeometry(w, h, spine), jacketMatArr);
           jacket.position.y = h / 2;
           jacket.castShadow = true; jacket.receiveShadow = true;
           itemRoot.add(jacket);
 
-          // 黑膠唱片：使用 Shape 幾何體保證孔洞完全在正中心
+          // 黑膠唱片：孔洞絕對正中心
           const recShape = new THREE.Shape();
           recShape.absarc(0, 0, w * 0.46, 0, Math.PI * 2, false);
           const hole = new THREE.Path();
-          hole.absarc(0, 0, 0.035, 0, Math.PI * 2, true); // 中心孔洞
+          hole.absarc(0, 0, 0.035, 0, Math.PI * 2, true);
           recShape.holes.push(hole);
 
           const recGeo = new THREE.ExtrudeGeometry(recShape, { depth: 0.015, bevelEnabled: false, curveSegments: 64 });
-          recGeo.center(); // 校正幾何重心
+          recGeo.center();
 
           const recMat = new THREE.MeshStandardMaterial({
             map: p.textures.disc || makeVinylTexture(),
@@ -646,13 +668,13 @@
           });
           const disc = new THREE.Mesh(recGeo, recMat);
           disc.rotation.x = Math.PI / 2;
-          disc.position.set(0, 0, 0); // 初始置中封套內部
+          disc.position.set(0, 0, 0);
           disc.castShadow = true; disc.receiveShadow = true;
           disc.name = 'disc';
           jacket.add(disc);
         }
         else if (p.type === 'cd_jewel') {
-          // CD 寶麗盒 (硬質透明塑膠盒)
+          // CD 寶麗盒 (硬質透明塑膠殼)
           const baseGroup = new THREE.Group();
           baseGroup.position.y = h / 2;
 
@@ -661,17 +683,17 @@
             roughness: 0.05, ior: 1.5, thickness: 0.08
           });
 
-          // 底座
+          // 透明底托
           const bottomCase = new THREE.Mesh(new THREE.BoxGeometry(w, h, spine * 0.5), acrylMat);
           bottomCase.position.z = -spine * 0.25;
           baseGroup.add(bottomCase);
 
-          // 底紙 (背面)
+          // 托盤底紙 (封底)
           const backInlay = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.96, h * 0.96), backMat);
           backInlay.position.z = -spine * 0.24;
           baseGroup.add(backInlay);
 
-          // CD 光碟片
+          // CD 光碟 (帶中心孔洞)
           const cdShape = new THREE.Shape();
           cdShape.absarc(0, 0, w * 0.42, 0, Math.PI * 2, false);
           const cdHole = new THREE.Path();
@@ -687,7 +709,7 @@
           cdMesh.position.z = 0.01;
           baseGroup.add(cdMesh);
 
-          // 鉸鏈旋轉軸組 (左側翻蓋)
+          // 鉸鏈旋轉軸組 (左側樞紐開合)
           const hingeGroup = new THREE.Group();
           hingeGroup.position.set(-w / 2, 0, spine * 0.25);
 
@@ -705,16 +727,14 @@
           itemRoot.add(baseGroup);
         }
         else if (p.type === 'cd_digipak') {
-          // CD Digipak (外層紙材質，可對折開合)
+          // CD Digipak (紙質對折翻蓋)
           const digiGroup = new THREE.Group();
           digiGroup.position.y = h / 2;
 
-          // 右頁托盤面
           const rightPage = new THREE.Mesh(new THREE.BoxGeometry(w, h, spine * 0.4), backMat);
           rightPage.position.x = w / 2;
           digiGroup.add(rightPage);
 
-          // 托盤上的 CD
           const cdShape = new THREE.Shape();
           cdShape.absarc(0, 0, w * 0.42, 0, Math.PI * 2, false);
           const cdHole = new THREE.Path();
@@ -729,7 +749,6 @@
           cdMesh.position.set(w / 2, 0, spine * 0.25);
           digiGroup.add(cdMesh);
 
-          // 左頁封面翻蓋
           const leftHinge = new THREE.Group();
           leftHinge.position.set(0, 0, 0);
 
@@ -744,11 +763,8 @@
         }
         else {
           // 滿版小卡 / 明信片
-          const cardMatArray = [
-            backMat, backMat, backMat, backMat,
-            frontMat, backMat
-          ];
-          const card = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.015), cardMatArray);
+          const cardMatArr = [backMat, backMat, backMat, backMat, frontMat, backMat];
+          const card = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.015), cardMatArr);
           card.position.y = h / 2;
           card.castShadow = true; card.receiveShadow = true;
           itemRoot.add(card);
@@ -760,28 +776,33 @@
       onInteractChange(document.getElementById('openSlider').value);
     }
 
+    function renderLoop() {
+      requestAnimationFrame(renderLoop);
+      if (currentView === '3d') {
+        controls.update();
+        renderer.render(scene, camera);
+      }
+    }
+
+    // --- 互動開合 / 抽出 ---
     function onInteractChange(val) {
       val = parseFloat(val);
       const curr = getSelectedProduct();
       const itemGroup = studioRoot.children.find(c => c.userData.id === curr.id);
-      if (!itemGroup) return;
-
-      if (curr.type === 'vinyl') {
-        const disc = itemGroup.getObjectByName('disc');
-        if (disc) {
-          // 黑膠唱片精準向右抽出
-          disc.position.x = val * (curr.w / 100) * 0.82;
+      if (itemGroup) {
+        if (curr.type === 'vinyl') {
+          const disc = itemGroup.getObjectByName('disc');
+          if (disc) disc.position.x = val * (curr.w / 100) * 0.85; // 正右方拉出
+        }
+        else if (curr.type === 'cd_jewel' || curr.type === 'cd_digipak') {
+          const hinge = itemGroup.getObjectByName('hinge');
+          if (hinge) hinge.rotation.y = -val * (Math.PI * 0.78);
         }
       }
-      else if (curr.type === 'cd_jewel' || curr.type === 'cd_digipak') {
-        const hinge = itemGroup.getObjectByName('hinge');
-        if (hinge) {
-          // 真實鉸鏈開闔展開
-          hinge.rotation.y = -val * (Math.PI * 0.78);
-        }
-      }
+      if (currentView === '2d') render2DCanvas();
     }
 
+    // --- 相機角度 ---
     function setCameraAngle(angle) {
       document.querySelectorAll('.angle-btn').forEach(b => b.classList.remove('active'));
       event?.target?.classList?.add('active');
@@ -799,7 +820,7 @@
       controls.update();
     }
 
-    // --- 2D 與展開圖平移縮放視角系統 ---
+    // --- 2D 與展開圖平移縮放視角 ---
     const viewTransform = {
       die: { x: 0, y: 0, scale: 1 },
       plan2d: { x: 0, y: 0, scale: 1 }
@@ -816,7 +837,7 @@
       });
 
       window.addEventListener('mousemove', e => {
-        if (isPanning) {
+        if (isPanning && ((viewKey === 'die' && currentView === 'die') || (viewKey === 'plan2d' && currentView === '2d'))) {
           viewTransform[viewKey].x = e.clientX - startPos.x;
           viewTransform[viewKey].y = e.clientY - startPos.y;
           redrawFn();
@@ -828,14 +849,17 @@
       canvas.addEventListener('wheel', e => {
         e.preventDefault();
         const zoomFactor = e.deltaY < 0 ? 1.08 : 0.92;
-        viewTransform[viewKey].scale = Math.min(Math.max(viewTransform[viewKey].scale * zoomFactor, 0.3), 4.0);
+        viewTransform[viewKey].scale = Math.min(Math.max(viewTransform[viewKey].scale * zoomFactor, 0.2), 5.0);
         redrawFn();
       }, { passive: false });
     }
 
+    // --- 展開圖 (刀模) 繪製 ---
     function renderDieCanvas() {
       const cvs = document.getElementById('canvasDie');
       const ctx = cvs.getContext('2d');
+      cvs.width = cvs.clientWidth;
+      cvs.height = cvs.clientHeight;
       const W = cvs.width, H = cvs.height;
       ctx.fillStyle = '#18191d';
       ctx.fillRect(0, 0, W, H);
@@ -846,33 +870,37 @@
       ctx.scale(vt.scale, vt.scale);
 
       const curr = getSelectedProduct();
-      const pw = curr.w * 1.5, ph = curr.h * 1.5;
-      const spine = (curr.spine || 6) * 1.5;
+      const pw = curr.w * 1.2, ph = curr.h * 1.2;
+      const spine = (curr.spine || 6) * 1.2;
       const totalW = pw * 2 + spine;
       const x0 = -totalW / 2, y0 = -ph / 2;
+
+      // 出血計算
+      const bRaw = parseFloat(document.getElementById('bleedVal')?.value || 3);
+      const bUnit = document.getElementById('bleedUnit')?.value || 'mm';
+      const bPos = document.getElementById('bleedPos')?.value || 'outside';
+      const bMm = bUnit === 'cm' ? bRaw * 10 : bRaw;
+      const bPx = bMm * 1.2 * (bPos === 'outside' ? 1 : -1);
 
       ctx.fillStyle = '#f6f6f8';
       ctx.fillRect(x0, y0, totalW, ph);
 
-      // 呈現使用者上傳之真實圖片
-      if (curr.textures.back && curr.textures.back.image) {
-        ctx.drawImage(curr.textures.back.image, x0, y0, pw, ph);
-      }
-      if (curr.textures.front && curr.textures.front.image) {
-        ctx.drawImage(curr.textures.front.image, x0 + pw + spine, y0, pw, ph);
-      }
+      // 貼圖呈現
+      if (curr.textures.back && curr.textures.back.image) ctx.drawImage(curr.textures.back.image, x0, y0, pw, ph);
+      if (curr.textures.front && curr.textures.front.image) ctx.drawImage(curr.textures.front.image, x0 + pw + spine, y0, pw, ph);
 
-      // 印刷裁切框
+      // 印刷框
       ctx.strokeStyle = '#2c2d35';
       ctx.strokeRect(x0, y0, pw, ph);
       ctx.strokeRect(x0 + pw, y0, spine, ph);
       ctx.strokeRect(x0 + pw + spine, y0, pw, ph);
 
-      // 刀模線
+      // 出血線 (洋紅)
       ctx.strokeStyle = '#e91e63';
       ctx.lineWidth = 1.5;
-      ctx.strokeRect(x0 - 6, y0 - 6, totalW + 12, ph + 12);
+      ctx.strokeRect(x0 - bPx, y0 - bPx, totalW + bPx * 2, ph + bPx * 2);
 
+      // 折線 (藍色虛線)
       ctx.strokeStyle = '#2196f3';
       ctx.setLineDash([6, 4]);
       ctx.beginPath();
@@ -883,16 +911,20 @@
 
       ctx.fillStyle = '#888';
       ctx.font = '12px sans-serif';
-      ctx.fillText(`展開尺寸：${curr.w * 2 + curr.spine} × ${curr.h} mm (含厚度 ${curr.spine} mm)`, x0, y0 - 18);
+      ctx.fillText(`完成尺寸：${curr.w * 2 + curr.spine} × ${curr.h} mm (出血: ${bRaw}${bUnit} ${bPos==='outside'?'外擴':'內縮'})`, x0, y0 - 18);
       ctx.fillText('封底 (Back)', x0 + pw / 2 - 30, y0 + ph / 2);
+      ctx.fillText('書背', x0 + pw + spine / 2 - 12, y0 + ph / 2);
       ctx.fillText('封面 (Front)', x0 + pw + spine + pw / 2 - 30, y0 + ph / 2);
 
       ctx.restore();
     }
 
+    // --- 2D 平面多品項排版 ---
     function render2DCanvas() {
       const cvs = document.getElementById('canvas2d');
       const ctx = cvs.getContext('2d');
+      cvs.width = cvs.clientWidth;
+      cvs.height = cvs.clientHeight;
       const W = cvs.width, H = cvs.height;
       ctx.fillStyle = document.getElementById('customBgColor').value;
       ctx.fillRect(0, 0, W, H);
@@ -902,6 +934,8 @@
       ctx.translate(vt.x, vt.y);
       ctx.scale(vt.scale, vt.scale);
 
+      const openVal = parseFloat(document.getElementById('openSlider').value);
+
       products.forEach(p => {
         ctx.save();
         ctx.translate(p.pos2D.x, p.pos2D.y);
@@ -910,9 +944,37 @@
         ctx.shadowBlur = 35;
         ctx.shadowOffsetY = 20;
 
+        // 若為黑膠，2D 連動繪製抽出唱片
+        if (p.type === 'vinyl' && openVal > 0) {
+          ctx.save();
+          ctx.translate(p.w * openVal * 0.75, 0);
+          ctx.beginPath();
+          ctx.arc(p.w / 2, p.h / 2, p.w * 0.46, 0, Math.PI * 2);
+          ctx.fillStyle = '#0a0a0c';
+          ctx.fill();
+          if (p.textures.disc && p.textures.disc.image) {
+            ctx.drawImage(p.textures.disc.image, p.w * 0.04, p.h * 0.04, p.w * 0.92, p.h * 0.92);
+          }
+          ctx.restore();
+        }
+
+        // 若為 CD，2D 連動繪製展開光碟
+        if ((p.type === 'cd_jewel' || p.type === 'cd_digipak') && openVal > 0) {
+          ctx.save();
+          ctx.translate(p.w * openVal * 0.85, 0);
+          ctx.beginPath();
+          ctx.arc(p.w / 2, p.h / 2, p.w * 0.44, 0, Math.PI * 2);
+          ctx.fillStyle = '#c8d0d8';
+          ctx.fill();
+          if (p.textures.disc && p.textures.disc.image) {
+            ctx.drawImage(p.textures.disc.image, p.w * 0.06, p.h * 0.06, p.w * 0.88, p.h * 0.88);
+          }
+          ctx.restore();
+        }
+
+        // 封面本體
         ctx.fillStyle = '#fff';
         ctx.fillRect(0, 0, p.w, p.h);
-
         if (p.textures.front && p.textures.front.image) {
           ctx.drawImage(p.textures.front.image, 0, 0, p.w, p.h);
         }
@@ -928,7 +990,42 @@
       ctx.restore();
     }
 
-    // --- 業務邏輯與介面同步 ---
+    // --- 2D 拖曳單項排版 ---
+    let drag2DItem = null, offset2D = { x: 0, y: 0 };
+    const cvs2D = document.getElementById('canvas2d');
+    cvs2D.addEventListener('mousedown', e => {
+      if (e.button !== 0) return;
+      const r = cvs2D.getBoundingClientRect();
+      const vt = viewTransform.plan2d;
+      const mx = (e.clientX - r.left - vt.x) / vt.scale;
+      const my = (e.clientY - r.top - vt.y) / vt.scale;
+
+      for (let i = products.length - 1; i >= 0; i--) {
+        const p = products[i];
+        if (mx >= p.pos2D.x && mx <= p.pos2D.x + p.w && my >= p.pos2D.y && my <= p.pos2D.y + p.h) {
+          selectProduct(p.id);
+          drag2DItem = p;
+          offset2D.x = mx - p.pos2D.x;
+          offset2D.y = my - p.pos2D.y;
+          break;
+        }
+      }
+    });
+
+    window.addEventListener('mousemove', e => {
+      if (drag2DItem && currentView === '2d') {
+        const r = cvs2D.getBoundingClientRect();
+        const vt = viewTransform.plan2d;
+        const mx = (e.clientX - r.left - vt.x) / vt.scale;
+        const my = (e.clientY - r.top - vt.y) / vt.scale;
+        drag2DItem.pos2D.x = mx - offset2D.x;
+        drag2DItem.pos2D.y = my - offset2D.y;
+        render2DCanvas();
+      }
+    });
+    window.addEventListener('mouseup', () => drag2DItem = null);
+
+    // --- 介面聯動與設定 ---
     function syncChipsUI() {
       const container = document.getElementById('productChips');
       container.innerHTML = '';
@@ -963,6 +1060,7 @@
 
       syncUploadBoxes();
       syncChipsUI();
+      buildAll3DModels();
       if (currentView === 'die') renderDieCanvas();
       if (currentView === '2d') render2DCanvas();
       setCameraAngle('iso');
@@ -973,28 +1071,24 @@
       const container = document.getElementById('uploadBoxContainer');
       container.innerHTML = '';
 
-      let parts = [
-        { key: 'front', label: '正面 / 封面' },
-        { key: 'back', label: '背面 / 封底' }
-      ];
-
+      let parts = [{ key: 'front', label: '正面 / 封面' }, { key: 'back', label: '背面 / 封底' }];
       if (p.type === 'vinyl') {
         parts = [
-          { key: 'front', label: '黑膠外套正面' },
-          { key: 'back', label: '黑膠外套封底' },
+          { key: 'front', label: '黑膠封套正面' },
+          { key: 'back', label: '黑膠封套封底' },
           { key: 'disc', label: '黑膠中心圓標' }
         ];
       } else if (p.type === 'cd_jewel') {
         parts = [
-          { key: 'front', label: '歌詞本封面' },
-          { key: 'back', label: '托盤底紙封底' },
-          { key: 'disc', label: 'CD 光碟盤面' }
+          { key: 'front', label: '歌詞本封面 (正面)' },
+          { key: 'back', label: '托盤底紙 (封底)' },
+          { key: 'disc', label: 'CD 實體光碟盤面' }
         ];
       } else if (p.type === 'cd_digipak') {
         parts = [
-          { key: 'front', label: 'Digipak 外封面' },
+          { key: 'front', label: 'Digipak 外折封面' },
           { key: 'back', label: 'Digipak 內托盤底' },
-          { key: 'disc', label: 'CD 光碟盤面' }
+          { key: 'disc', label: 'CD 實體光碟盤面' }
         ];
       }
 
@@ -1021,14 +1115,13 @@
         type: type,
         w: base.w, h: base.h, spine: base.spine, radius: base.r,
         metalness: 0.05, roughness: 0.65,
-        pos3D: { x: (products.length) * 3.6, y: 0, z: 0 },
-        pos2D: { x: 80 + products.length * 200, y: 150 },
+        pos3D: { x: (products.length) * 3.8, y: 0, z: 0 },
+        pos2D: { x: 100 + products.length * 180, y: 150 },
         textures: { ...base.tex }
       };
 
       products.push(newP);
       selectProduct(newP.id);
-      buildAll3DModels();
     }
 
     function deleteProduct(id, e) {
@@ -1036,7 +1129,6 @@
       if (products.length <= 1) return alert('畫面中請至少保留一個產品！');
       products = products.filter(p => p.id !== id);
       selectProduct(products[0].id);
-      buildAll3DModels();
     }
 
     function applyCurrentSettings() {
@@ -1055,9 +1147,10 @@
 
     function confirmChanges() {
       applyCurrentSettings();
-      alert('✔ 設定已即時保存並套用至打樣視圖！');
+      alert('✔ 所有設定已即時保存並套用至各打樣視圖！');
     }
 
+    // --- 圖稿獨立上傳 ---
     let uploadTarget = 'front';
     function triggerUpload(target) {
       uploadTarget = target;
@@ -1084,6 +1177,7 @@
       reader.readAsDataURL(file);
     });
 
+    // --- 頂部視圖切換 ---
     let currentView = '3d';
     function setViewMode(mode) {
       currentView = mode;
@@ -1096,6 +1190,11 @@
       document.getElementById('canvas2d').style.display = mode === '2d' ? 'block' : 'none';
       document.getElementById('bottomBar').style.display = mode === '3d' ? 'flex' : 'none';
 
+      if (mode === '3d') {
+        camera.aspect = document.getElementById('viewport3d').clientWidth / document.getElementById('viewport3d').clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(document.getElementById('viewport3d').clientWidth, document.getElementById('viewport3d').clientHeight);
+      }
       if (mode === 'die') renderDieCanvas();
       if (mode === '2d') render2DCanvas();
     }
@@ -1105,12 +1204,16 @@
       document.querySelectorAll('.step-content').forEach((p, i) => p.style.display = i === idx ? 'block' : 'none');
     }
 
+    // --- 背景與材質 ---
     function updateCustomBg(color) {
       renderer.setClearColor(color, 1);
       if (currentView === '2d') render2DCanvas();
     }
 
     function setBgPreset(mode) {
+      document.querySelectorAll('#step-3 .pill-btn').forEach(b => b.classList.remove('active'));
+      event?.target?.classList?.add('active');
+
       if (mode === 'pure_white') {
         updateCustomBg('#ffffff');
         groundMesh.material.opacity = 0.12;
@@ -1127,11 +1230,17 @@
     }
 
     function setPaper(type) {
+      document.querySelectorAll('#step-1 .pill-btn').forEach(b => b.classList.remove('active'));
+      event?.target?.classList?.add('active');
+
       const p = getSelectedProduct();
       if (type === 'coated') { p.metalness = 0.05; p.roughness = 0.35; }
       else if (type === 'matte') { p.metalness = 0.0; p.roughness = 0.85; }
       else if (type === 'holotech') { p.metalness = 0.95; p.roughness = 0.15; }
       else if (type === 'kraft') { p.metalness = 0.0; p.roughness = 0.95; }
+      else if (type === 'pearl') { p.metalness = 0.35; p.roughness = 0.45; }
+      else if (type === 'clear') { p.metalness = 0.1; p.roughness = 0.05; }
+
       document.getElementById('metalness').value = p.metalness;
       document.getElementById('roughness').value = p.roughness;
       applyCurrentSettings();
@@ -1161,6 +1270,8 @@
       camera.aspect = c.clientWidth / c.clientHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(c.clientWidth, c.clientHeight);
+      if (currentView === 'die') renderDieCanvas();
+      if (currentView === '2d') render2DCanvas();
     });
 
     window.onload = () => {
