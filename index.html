@@ -26,6 +26,7 @@
       overflow: hidden;
     }
 
+    /* 頂部導航 */
     header {
       position: absolute;
       top: 0; left: 0; right: 0;
@@ -70,6 +71,7 @@
     }
     .top-tab.active { background: #fff; color: #111; }
 
+    /* 側邊主面板 */
     aside {
       width: 380px;
       height: 100vh;
@@ -157,7 +159,7 @@
       color: var(--text);
       padding: 5px 8px;
       border-radius: 5px;
-      width: 90px;
+      width: 95px;
       font-size: 12px;
       text-align: right;
     }
@@ -218,6 +220,7 @@
     .chip.active { border-color: var(--accent); color: var(--accent); font-weight: 600; }
     .chip .del { font-weight: bold; cursor: pointer; color: #ff5252; margin-left: 2px; }
 
+    /* 主舞台 */
     main {
       flex: 1;
       position: relative;
@@ -276,6 +279,22 @@
       transition: background 0.2s;
     }
     .primary-btn:hover { background: var(--accent-active); }
+
+    .canva-box {
+      background: #252631;
+      border: 1px solid #7d2ae8;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      font-size: 12px;
+    }
+    .canva-box a {
+      color: #b388ff;
+      text-decoration: none;
+      font-weight: 600;
+      display: inline-block;
+      margin-top: 6px;
+    }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -317,11 +336,14 @@
           <button class="pill-btn" onclick="addNewProduct('vinyl')">＋ 黑膠 12" 封套</button>
           <button class="pill-btn" onclick="addNewProduct('cd_digipak')">＋ CD Digipak (紙質)</button>
           <button class="pill-btn" onclick="addNewProduct('cd_jewel')">＋ CD 寶麗盒 (塑膠殼)</button>
+          <button class="pill-btn" onclick="addNewProduct('calendar_desk')">＋ 桌曆 (三角上翻)</button>
+          <button class="pill-btn" onclick="addNewProduct('calendar_wall')">＋ 年曆 (左翻掛曆)</button>
+          <button class="pill-btn" onclick="addNewProduct('notebook')">＋ 筆記本 (精裝/線圈)</button>
           <button class="pill-btn" onclick="addNewProduct('photocard')">＋ 滿版照片小卡</button>
           <button class="pill-btn" onclick="addNewProduct('postcard')">＋ 明信片 / 單卡</button>
         </div>
 
-        <div class="sec-h">所選品項尺寸與外觀 (mm)</div>
+        <div class="sec-h">所選品項外觀尺寸 (MM)</div>
         <div class="form-row">
           <label>寬度 (W)</label>
           <input type="number" id="dimW" oninput="applyCurrentSettings()">
@@ -337,6 +359,10 @@
         <div class="form-row" id="rowRadius">
           <label>圓角半徑 (Radius)</label>
           <input type="number" id="dimRadius" oninput="applyCurrentSettings()">
+        </div>
+        <div class="form-row" id="rowPages" style="display:none;">
+          <label>內頁頁數 (Pages)</label>
+          <input type="number" id="dimPages" value="12" min="1" max="60" oninput="applyCurrentSettings()">
         </div>
 
         <div class="sec-h" style="margin-top:14px;">展開圖刀模出血設定</div>
@@ -370,9 +396,9 @@
           <button class="pill-btn" id="btn_mat_pearl" onclick="setPaper('pearl')">珠光紙</button>
           <button class="pill-btn" id="btn_mat_clear" onclick="setPaper('clear')">透明壓克力</button>
         </div>
-        <div class="sec-h">微調參數 (即時生效)</div>
+        <div class="sec-h">微調參數 (即時反饋)</div>
         <div class="form-row">
-          <label>金屬光澤感</label>
+          <label>金屬光澤度</label>
           <input type="range" id="metalness" min="0" max="1" step="0.05" oninput="applyCurrentSettings()">
         </div>
         <div class="form-row">
@@ -381,12 +407,16 @@
         </div>
       </div>
 
-      <!-- 步驟 3: 部件貼圖 -->
+      <!-- 步驟 3: 部件貼圖 & Canva 整合 -->
       <div id="step-2" class="step-content" style="display:none;">
+        <div class="canva-box">
+          <p>🎨 <strong>Canva 設計連動</strong></p>
+          <p style="color:var(--muted); font-size:11px; margin-top:2px;">依照本品項設定尺寸，在 Canva 匯出 JPG/PNG 即可直接拖入以下各部件：</p>
+          <a href="https://canva.link/xp7j4ndrlhdnnrc" target="_blank">點此開啟 Canva 專案範本 ↗</a>
+        </div>
         <div class="sec-h">所選產品部件貼圖替換</div>
         <div id="uploadBoxContainer"></div>
         <input type="file" id="fileIn" style="display:none;" accept="image/*">
-        <p style="font-size: 11px; color: var(--muted); margin-top: 8px;">* 支援高解析 PNG/JPG；各部件獨立生效，展開圖與 3D 雙向同步。</p>
       </div>
 
       <!-- 步驟 4: 光線與場景 -->
@@ -456,7 +486,7 @@
         <button class="angle-btn" onclick="setCameraAngle('back')">翻面</button>
       </div>
       <div class="interact-row">
-        <span id="openLabel">開闔 / 抽出唱片</span>
+        <span id="openLabel">開闔 / 翻頁 / 抽出</span>
         <input type="range" id="openSlider" min="0" max="1" step="0.01" value="0.25" oninput="onInteractChange(this.value)">
       </div>
     </div>
@@ -506,23 +536,21 @@
       return new THREE.CanvasTexture(c);
     }
 
-    // 真實白銀金屬 CD 盤面紋理 (非綠色)
+    // 真正真實銀白色金屬光碟盤面 (非綠色)
     function makeCDTexture() {
       const c = document.createElement('canvas');
       c.width = 1024; c.height = 1024;
       const ctx = c.getContext('2d');
-      // 銀白光碟鏡面
-      ctx.fillStyle = '#dce1e8';
+      ctx.fillStyle = '#d8dee6';
       ctx.fillRect(0, 0, 1024, 1024);
-      // 光學微細彩光
-      const grad = ctx.createRadialGradient(512, 512, 100, 512, 512, 512);
-      grad.addColorStop(0, '#f5f7fa');
-      grad.addColorStop(0.5, '#c5cbd4');
-      grad.addColorStop(1, '#e3e8f0');
+
+      const grad = ctx.createRadialGradient(512, 512, 120, 512, 512, 512);
+      grad.addColorStop(0, '#f8fafc');
+      grad.addColorStop(0.5, '#c0c7d0');
+      grad.addColorStop(1, '#e2e8f0');
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, 1024, 1024);
 
-      // 上半絲印
       ctx.fillStyle = '#1c2438';
       ctx.beginPath();
       ctx.arc(512, 512, 490, Math.PI, Math.PI * 2);
@@ -540,7 +568,7 @@
       {
         id: 'p1',
         type: 'vinyl',
-        w: 314, h: 314, spine: 6, radius: 0,
+        w: 314, h: 314, spine: 6, radius: 0, pages: 1,
         metalness: 0.05, roughness: 0.65,
         pos3D: { x: 0, y: 0, z: 0 },
         pos2D: { x: 120, y: 150 },
@@ -598,7 +626,7 @@
 
       scene.add(new THREE.AmbientLight(0xffffff, 0.45));
 
-      const gGeo = new THREE.PlaneGeometry(60, 60);
+      const gGeo = new THREE.PlaneGeometry(80, 80);
       const gMat = new THREE.ShadowMaterial({ opacity: 0.45 });
       groundMesh = new THREE.Mesh(gGeo, gMat);
       groundMesh.rotation.x = -Math.PI / 2;
@@ -624,7 +652,7 @@
 
         const w = p.w / 100;
         const h = p.h / 100;
-        const spine = (p.spine || 4) / 100;
+        const spine = Math.max((p.spine || 4) / 100, 0.01);
 
         const frontMat = new THREE.MeshStandardMaterial({
           map: p.textures.front,
@@ -638,15 +666,21 @@
           roughness: p.roughness
         });
 
+        const insideMat = new THREE.MeshStandardMaterial({
+          map: p.textures.inside || p.textures.front,
+          metalness: p.metalness,
+          roughness: p.roughness
+        });
+
         if (p.type === 'vinyl') {
-          // 黑膠封套
+          // 黑膠唱片：封套幾何
           const jacketMatArr = [backMat, backMat, backMat, backMat, frontMat, backMat];
           const jacket = new THREE.Mesh(new THREE.BoxGeometry(w, h, spine), jacketMatArr);
           jacket.position.y = h / 2;
           jacket.castShadow = true; jacket.receiveShadow = true;
           itemRoot.add(jacket);
 
-          // 黑膠唱片：Shape 幾何體中心校正
+          // 黑膠唱片實體：圓形貫穿孔洞嚴格居中
           const recShape = new THREE.Shape();
           recShape.absarc(0, 0, w * 0.46, 0, Math.PI * 2, false);
           const hole = new THREE.Path();
@@ -662,14 +696,16 @@
             roughness: 0.25
           });
           const disc = new THREE.Mesh(recGeo, recMat);
+          // 與封套平行放置
           disc.rotation.x = Math.PI / 2;
+          disc.rotation.y = 0;
           disc.position.set(0, 0, 0);
           disc.castShadow = true; disc.receiveShadow = true;
           disc.name = 'disc';
           jacket.add(disc);
         }
         else if (p.type === 'cd_jewel') {
-          // CD 寶麗盒 (硬質透明塑膠盒)
+          // CD 寶麗盒 (硬質透明塑膠殼)
           const baseGroup = new THREE.Group();
           baseGroup.position.y = h / 2;
 
@@ -678,17 +714,17 @@
             roughness: 0.05, ior: 1.5, thickness: 0.08
           });
 
-          // 底座
+          // 透明底盒
           const bottomCase = new THREE.Mesh(new THREE.BoxGeometry(w, h, spine * 0.5), acrylMat);
           bottomCase.position.z = -spine * 0.25;
           baseGroup.add(bottomCase);
 
-          // 底紙 (封底)
+          // 托盤底紙 (封底背卡)
           const backInlay = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.96, h * 0.96), backMat);
           backInlay.position.z = -spine * 0.24;
           baseGroup.add(backInlay);
 
-          // CD 光碟 (白銀高反光材質，非綠色)
+          // CD 光碟放置於底座托盤內 (銀白色金屬光澤)
           const cdShape = new THREE.Shape();
           cdShape.absarc(0, 0, w * 0.42, 0, Math.PI * 2, false);
           const cdHole = new THREE.Path();
@@ -704,7 +740,7 @@
           cdMesh.position.z = 0.01;
           baseGroup.add(cdMesh);
 
-          // 鉸鏈旋轉軸組 (左側樞紐開合)
+          // 鉸鏈旋轉軸組 (左側樞紐開合上蓋)
           const hingeGroup = new THREE.Group();
           hingeGroup.position.set(-w / 2, 0, spine * 0.25);
 
@@ -726,7 +762,7 @@
           const digiGroup = new THREE.Group();
           digiGroup.position.y = h / 2;
 
-          const rightPage = new THREE.Mesh(new THREE.BoxGeometry(w, h, spine * 0.4), backMat);
+          const rightPage = new THREE.Mesh(new THREE.BoxGeometry(w, h, spine * 0.4), insideMat);
           rightPage.position.x = w / 2;
           digiGroup.add(rightPage);
 
@@ -756,10 +792,56 @@
           digiGroup.add(leftHinge);
           itemRoot.add(digiGroup);
         }
+        else if (p.type === 'calendar_desk') {
+          // 桌曆 (上翻三角底座)
+          const standGroup = new THREE.Group();
+          standGroup.position.y = h / 2;
+
+          // 三角底座支架
+          const standGeo = new THREE.CylinderGeometry(w * 0.5, w * 0.5, h, 3, 1, false);
+          const standMat = new THREE.MeshStandardMaterial({ color: 0x222329, roughness: 0.8 });
+          const stand = new THREE.Mesh(standGeo, standMat);
+          stand.rotation.z = Math.PI / 2;
+          stand.scale.set(0.2, 1, 0.4);
+          standGroup.add(stand);
+
+          // 頂部翻動頁面
+          const flipHinge = new THREE.Group();
+          flipHinge.position.set(0, h * 0.48, 0.12);
+
+          const page = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.95, h * 0.9), frontMat);
+          page.position.set(0, -h * 0.45, 0);
+          flipHinge.add(page);
+          flipHinge.name = 'hinge';
+
+          standGroup.add(flipHinge);
+          itemRoot.add(standGroup);
+        }
+        else if (p.type === 'calendar_wall' || p.type === 'notebook') {
+          // 筆記本 / 掛曆 (左翻對折式)
+          const bookGroup = new THREE.Group();
+          bookGroup.position.y = h / 2;
+
+          const baseCover = new THREE.Mesh(new THREE.BoxGeometry(w, h, spine * 0.5), backMat);
+          baseCover.position.x = w / 2;
+          bookGroup.add(baseCover);
+
+          // 左翻鉸鏈封面
+          const bookHinge = new THREE.Group();
+          bookHinge.position.set(0, 0, spine * 0.25);
+
+          const flipCover = new THREE.Mesh(new THREE.BoxGeometry(w, h, spine * 0.4), frontMat);
+          flipCover.position.set(w / 2, 0, 0);
+          bookHinge.add(flipCover);
+          bookHinge.name = 'hinge';
+
+          bookGroup.add(bookHinge);
+          itemRoot.add(bookGroup);
+        }
         else {
           // 滿版小卡 / 明信片
           const cardMatArr = [backMat, backMat, backMat, backMat, frontMat, backMat];
-          const card = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.015), cardMatArr);
+          const card = new THREE.Mesh(new THREE.BoxGeometry(w, h, spine), cardMatArr);
           card.position.y = h / 2;
           card.castShadow = true; card.receiveShadow = true;
           itemRoot.add(card);
@@ -779,7 +861,7 @@
       }
     }
 
-    // --- 互動開合 / 抽出 ---
+    // --- 互動開闔 / 翻頁 / 抽出 ---
     function onInteractChange(val) {
       val = parseFloat(val);
       const curr = getSelectedProduct();
@@ -787,11 +869,18 @@
       if (itemGroup) {
         if (curr.type === 'vinyl') {
           const disc = itemGroup.getObjectByName('disc');
-          if (disc) disc.position.x = val * (curr.w / 100) * 0.85; // 正右方拉出
+          if (disc) {
+            // 黑膠唱片：沿封套右邊平順滑出
+            disc.position.x = val * (curr.w / 100) * 0.85;
+          }
         }
-        else if (curr.type === 'cd_jewel' || curr.type === 'cd_digipak') {
+        else if (curr.type === 'calendar_desk') {
           const hinge = itemGroup.getObjectByName('hinge');
-          if (hinge) hinge.rotation.y = -val * (Math.PI * 0.78);
+          if (hinge) hinge.rotation.x = -val * (Math.PI * 0.85); // 上翻翻頁
+        }
+        else {
+          const hinge = itemGroup.getObjectByName('hinge');
+          if (hinge) hinge.rotation.y = -val * (Math.PI * 0.8); // 左掀開合
         }
       }
       if (currentView === '2d') render2DCanvas();
@@ -825,6 +914,7 @@
       let isPanning = false, startPos = { x: 0, y: 0 };
 
       canvas.addEventListener('mousedown', e => {
+        // 中鍵或左鍵空白處平移
         if (e.button === 1 || (e.button === 0 && !drag2DItem)) {
           isPanning = true;
           startPos = { x: e.clientX - viewTransform[viewKey].x, y: e.clientY - viewTransform[viewKey].y };
@@ -870,7 +960,7 @@
       const totalW = pw * 2 + spine;
       const x0 = -totalW / 2, y0 = -ph / 2;
 
-      // 出血計算
+      // 出血設定與計算
       const bRaw = parseFloat(document.getElementById('bleedVal')?.value || 3);
       const bUnit = document.getElementById('bleedUnit')?.value || 'mm';
       const bPos = document.getElementById('bleedPos')?.value || 'outside';
@@ -880,7 +970,7 @@
       ctx.fillStyle = '#f6f6f8';
       ctx.fillRect(x0, y0, totalW, ph);
 
-      // 貼圖呈現
+      // 圖稿
       if (curr.textures.back && curr.textures.back.image) ctx.drawImage(curr.textures.back.image, x0, y0, pw, ph);
       if (curr.textures.front && curr.textures.front.image) ctx.drawImage(curr.textures.front.image, x0 + pw + spine, y0, pw, ph);
 
@@ -939,7 +1029,7 @@
         ctx.shadowBlur = 35;
         ctx.shadowOffsetY = 20;
 
-        // 若為黑膠，2D 連動繪製抽出唱片
+        // 黑膠唱片：平順往右抽出
         if (p.type === 'vinyl' && openVal > 0) {
           ctx.save();
           ctx.translate(p.w * openVal * 0.75, 0);
@@ -953,13 +1043,13 @@
           ctx.restore();
         }
 
-        // 若為 CD，2D 連動繪製展開光碟
+        // CD 系列：僅外殼與抽出/展開之光碟 (不畫出白內頁)
         if ((p.type === 'cd_jewel' || p.type === 'cd_digipak') && openVal > 0) {
           ctx.save();
           ctx.translate(p.w * openVal * 0.85, 0);
           ctx.beginPath();
           ctx.arc(p.w / 2, p.h / 2, p.w * 0.44, 0, Math.PI * 2);
-          ctx.fillStyle = '#c8d0d8';
+          ctx.fillStyle = '#d8dee6';
           ctx.fill();
           if (p.textures.disc && p.textures.disc.image) {
             ctx.drawImage(p.textures.disc.image, p.w * 0.06, p.h * 0.06, p.w * 0.88, p.h * 0.88);
@@ -985,7 +1075,7 @@
       ctx.restore();
     }
 
-    // --- 2D 拖曳單項排版 (精確單一移動) ---
+    // --- 2D 獨立拖曳單項排版 ---
     let drag2DItem = null, offset2D = { x: 0, y: 0 };
     const cvs2D = document.getElementById('canvas2d');
     cvs2D.addEventListener('mousedown', e => {
@@ -995,6 +1085,7 @@
       const mx = (e.clientX - r.left - vt.x) / vt.scale;
       const my = (e.clientY - r.top - vt.y) / vt.scale;
 
+      // 由上至下檢索點擊之單一產品
       for (let i = products.length - 1; i >= 0; i--) {
         const p = products[i];
         if (mx >= p.pos2D.x && mx <= p.pos2D.x + p.w && my >= p.pos2D.y && my <= p.pos2D.y + p.h) {
@@ -1031,6 +1122,9 @@
           vinyl: '黑膠封套',
           cd_digipak: 'CD Digipak',
           cd_jewel: 'CD 寶麗盒',
+          calendar_desk: '桌曆(上翻)',
+          calendar_wall: '年曆(左翻)',
+          notebook: '筆記本',
           photocard: '滿版小卡',
           postcard: '明信片'
         };
@@ -1048,10 +1142,12 @@
       document.getElementById('dimH').value = p.h;
       document.getElementById('dimSpine').value = p.spine;
       document.getElementById('dimRadius').value = p.radius;
+      document.getElementById('dimPages').value = p.pages || 12;
       document.getElementById('metalness').value = p.metalness;
       document.getElementById('roughness').value = p.roughness;
 
-      document.getElementById('rowSpine').style.display = (p.type === 'vinyl' || p.type === 'cd_jewel' || p.type === 'cd_digipak') ? 'flex' : 'none';
+      document.getElementById('rowSpine').style.display = 'flex';
+      document.getElementById('rowPages').style.display = (p.type.includes('calendar') || p.type === 'notebook') ? 'flex' : 'none';
 
       syncUploadBoxes();
       syncChipsUI();
@@ -1076,14 +1172,21 @@
       } else if (p.type === 'cd_jewel') {
         parts = [
           { key: 'front', label: '歌詞本封面 (正面)' },
-          { key: 'back', label: '托盤底紙 (封底)' },
+          { key: 'back', label: '底盒底紙 (封底背卡)' },
           { key: 'disc', label: 'CD 實體光碟盤面' }
         ];
       } else if (p.type === 'cd_digipak') {
         parts = [
           { key: 'front', label: 'Digipak 外折封面' },
-          { key: 'back', label: 'Digipak 內托盤底' },
+          { key: 'back', label: 'Digipak 內折底頁' },
+          { key: 'inside', label: '托盤襯底插圖' },
           { key: 'disc', label: 'CD 實體光碟盤面' }
+        ];
+      } else if (p.type.includes('calendar') || p.type === 'notebook') {
+        parts = [
+          { key: 'front', label: '封面 (Cover)' },
+          { key: 'inside', label: '內頁正面 (Page Front)' },
+          { key: 'back', label: '封底 (Back)' }
         ];
       }
 
@@ -1098,17 +1201,20 @@
     function addNewProduct(type) {
       const presets = {
         vinyl: { w: 314, h: 314, spine: 6, r: 0, tex: { front: makeArt('MIDNIGHT', 'LUNA HARBOR', '#161c28'), back: makeArt('TRACKLIST', '1. Harbor Lights', '#1e2430'), disc: makeVinylTexture() } },
-        cd_digipak: { w: 140, h: 125, spine: 8, r: 0, tex: { front: makeArt('DIGIPAK', 'SINGLE', '#232b36'), back: makeArt('LYRICS', 'BOOKLET', '#1a2233'), disc: makeCDTexture() } },
+        cd_digipak: { w: 140, h: 125, spine: 8, r: 0, tex: { front: makeArt('DIGIPAK', 'SINGLE', '#232b36'), back: makeArt('LYRICS', 'BOOKLET', '#1a2233'), inside: makeArt('INSIDE', 'ART', '#28313e'), disc: makeCDTexture() } },
         cd_jewel: { w: 142, h: 125, spine: 10, r: 2, tex: { front: makeArt('JEWEL', 'CASE', '#2a3342'), back: makeArt('BACK INLAY', 'BARCODE', '#1f242e'), disc: makeCDTexture() } },
-        photocard: { w: 55, h: 85, spine: 0, r: 4, tex: { front: makeArt('PHOTO', 'CARD', '#382228'), back: makeArt('AUTOGRAPH', 'SPECIAL', '#201618') } },
-        postcard: { w: 148, h: 100, spine: 0, r: 0, tex: { front: makeArt('POSTCARD', 'EDITION', '#25292e'), back: makeArt('STAMP HERE', 'POSTAL', '#e8e8e8') } }
+        calendar_desk: { w: 210, h: 150, spine: 25, r: 0, pages: 12, tex: { front: makeArt('2027 CALENDAR', 'DESK EDITION', '#3a2e2b') } },
+        calendar_wall: { w: 297, h: 420, spine: 10, r: 0, pages: 12, tex: { front: makeArt('WALL CALENDAR', 'POSTER', '#263238') } },
+        notebook: { w: 148, h: 210, spine: 14, r: 4, pages: 48, tex: { front: makeArt('NOTEBOOK', 'JOURNAL', '#2e382b') } },
+        photocard: { w: 55, h: 85, spine: 0.5, r: 4, tex: { front: makeArt('PHOTO', 'CARD', '#382228'), back: makeArt('AUTOGRAPH', 'SPECIAL', '#201618') } },
+        postcard: { w: 148, h: 100, spine: 0.5, r: 0, tex: { front: makeArt('POSTCARD', 'EDITION', '#25292e'), back: makeArt('STAMP HERE', 'POSTAL', '#e8e8e8') } }
       };
 
       const base = presets[type];
       const newP = {
         id: 'p_' + Date.now(),
         type: type,
-        w: base.w, h: base.h, spine: base.spine, radius: base.r,
+        w: base.w, h: base.h, spine: base.spine, radius: base.r, pages: base.pages || 1,
         metalness: 0.05, roughness: 0.65,
         pos3D: { x: (products.length) * 3.8, y: 0, z: 0 },
         pos2D: { x: 100 + products.length * 180, y: 150 },
@@ -1132,6 +1238,7 @@
       p.h = parseFloat(document.getElementById('dimH').value) || p.h;
       p.spine = parseFloat(document.getElementById('dimSpine').value) || 0;
       p.radius = parseFloat(document.getElementById('dimRadius').value) || 0;
+      p.pages = parseInt(document.getElementById('dimPages').value) || p.pages;
       p.metalness = parseFloat(document.getElementById('metalness').value);
       p.roughness = parseFloat(document.getElementById('roughness').value);
 
