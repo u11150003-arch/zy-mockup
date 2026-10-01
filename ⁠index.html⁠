@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>zy產品照打樣室</title>
+  <style>
+    :root {
+      --bg: #121214;
+      --panel: #1a1a1e;
+      --card: #26262b;
+      --accent: #e57373;
+      --accent-hover: #ef5350;
+      --text: #f0f0f3;
+      --muted: #9e9ea7;
+      --border: #33333a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+    /* 側邊控制面板 */
+    aside {
+      width: 380px;
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      z-index: 10;
+    }
+    .header {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .header h1 { font-size: 18px; letter-spacing: 1px; color: var(--text); }
+    .header p { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .content {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 10px;
+    }
+    /* 模式切換按鈕組 */
+    .seg-ctrl {
+      display: flex;
+      background: var(--card);
+      padding: 3px;
+      border-radius: 8px;
+    }
+    .seg-ctrl button {
+      flex: 1;
+      border: 0;
+      padding: 8px 12px;
+      font-size: 13px;
+      color: var(--muted);
+      background: transparent;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .seg-ctrl button.active {
+      background: var(--accent);
+      color: #fff;
+      font-weight: 600;
+    }
+    /* 產品選單 */
+    .btn-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    .btn-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .btn-item:hover { border-color: var(--accent); }
+    /* 控制控制元件 */
+    .ctrl-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: var(--card);
+      padding: 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    .ctrl-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }
+    .ctrl-row label { color: var(--muted); }
+    .ctrl-row input[type="range"] {
+      width: 140px;
+      accent-color: var(--accent);
+    }
+    .ctrl-row select {
+      background: var(--panel);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 5px 8px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+    /* 上傳與操作按鈕 */
+    .upload-btn {
+      display: block;
+      width: 100%;
+      background: transparent;
+      border: 1px dashed var(--accent);
+      color: var(--accent);
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+      cursor: pointer;
+      font-size: 13px;
+      transition: background 0.2s;
+    }
+    .upload-btn:hover { background: rgba(229, 115, 115, 0.08); }
+    .action-btn {
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .action-btn:hover { background: var(--accent-hover); }
+
+    /* 主舞台區塊 */
+    main {
+      flex: 1;
+      position: relative;
+      background: #0d0d0f;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    #canvas2d {
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+      border-radius: 4px;
+      max-width: 92%;
+      max-height: 92%;
+    }
+    #viewport3d {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      inset: 0;
+      display: none;
+    }
+    .tip {
+      position: absolute;
+      bottom: 20px;
+      background: rgba(26, 26, 30, 0.85);
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      color: var(--muted);
+      backdrop-filter: blur(4px);
+    }
+  </style>
+  <!-- 引入 3D 渲染所需 Three.js 及軌道控制器 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+
+  <!-- 控制側邊欄 -->
+  <aside>
+    <div class="header">
+      <h1>PROOFROOM STUDIO</h1>
+      <p>即時設計打樣 · 2D 拼版與 3D 材質模擬</p>
+    </div>
+
+    <div class="content">
+      <!-- 渲染檢視切換 -->
+      <div>
+        <div class="section-title">展示模式</div>
+        <div class="seg-ctrl">
+          <button id="btn2D" class="active" onclick="switchView('2d')">2D 平面打樣拼版</button>
+          <button id="btn3D" onclick="switchView('3d')">3D 立體打樣展示</button>
+        </div>
+      </div>
+
+      <!-- 圖片自訂 -->
+      <div>
+        <div class="section-title">自訂設計圖案</div>
+        <label class="upload-btn">
+          ＋ 上傳自訂圖稿 (PNG/JPG)
+          <input type="file" id="imgUpload" accept="image/*" style="display:none">
+        </label>
+      </div>
+
+      <!-- 產品類型選擇 -->
+      <div>
+        <div class="section-title">加入產品實體</div>
+        <div class="btn-grid">
+          <button class="btn-item" onclick="addProduct('towel')">應援手幅 (布面)</button>
+          <button class="btn-item" onclick="addProduct('card')">小卡 / 拍立得</button>
+          <button class="btn-item" onclick="addProduct('standee')">壓克力立牌</button>
+          <button class="btn-item" onclick="addProduct('box')">包裝紙盒</button>
+        </div>
+      </div>
+
+      <!-- 打樣材質與光感控制 -->
+      <div>
+        <div class="section-title">打樣工藝與材質設定</div>
+        <div class="ctrl-group">
+          <div class="ctrl-row">
+            <label>工藝材質預設</label>
+            <select id="matPreset" onchange="applyMaterialPreset()">
+              <option value="matte">啞光霧面 (Matte)</option>
+              <option value="glossy">高光亮面 (Glossy)</option>
+              <option value="foil">雷射金屬 (Metallic Foil)</option>
+              <option value="acrylic">透明壓克力 (Acrylic Glass)</option>
+            </select>
+          </div>
+          <div class="ctrl-row">
+            <label>金屬感 (Metalness)</label>
+            <input type="range" id="metalness" min="0" max="1" step="0.05" value="0.1" oninput="updateMaterials()">
+          </div>
+          <div class="ctrl-row">
+            <label>表面粗糙度 (Roughness)</label>
+            <input type="range" id="roughness" min="0" max="1" step="0.05" value="0.7" oninput="updateMaterials()">
+          </div>
+          <div class="ctrl-row">
+            <label>打樣環境底色</label>
+            <input type="color" id="bgColor" value="#0d0d0f" onchange="changeBg(this.value)">
+          </div>
+        </div>
+      </div>
+
+      <!-- 匯出按鈕 -->
+      <button class="action-btn" onclick="exportProof()">匯出高畫質打樣圖檔</button>
+    </div>
+  </aside>
+
+  <!-- 渲染主視窗 -->
+  <main>
+    <canvas id="canvas2d" width="1200" height="800"></canvas>
+    <div id="viewport3d"></div>
+    <div class="tip" id="statusTip">💡 提示：可在 2D 模式自由拖動產品組合位置，或切換 3D 檢視旋轉打樣細節</div>
+  </main>
+
+  <script>
+    // --- 狀態管理 ---
+    let currentMode = '2d';
+    let userTexture = null;
+    let customImage = new Image();
+
+    // 預設樣式圖片 (預設展示點綴)
+    customImage.crossOrigin = "anonymous";
+    customImage.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400"><rect width="400" height="400" fill="%232b2b36"/><circle cx="200" cy="200" r="120" fill="%23e57373"/><text x="200" y="210" font-size="28" font-family="sans-serif" fill="%23ffffff" text-anchor="middle" font-weight="bold">PROOF ART</text></svg>';
+
+    // --- 2D CANVAS 拼版打樣引擎 ---
+    const cvs = document.getElementById('canvas2d');
+    const ctx = cvs.getContext('2d');
+    let products2D = [
+      { id: '1', type: 'towel', x: 100, y: 150, w: 450, h: 180, name: 'Slogan 手幅' },
+      { id: '2', type: 'card', x: 620, y: 150, w: 200, h: 300, name: '照片小卡' },
+      { id: '3', type: 'standee', x: 880, y: 220, w: 180, h: 260, name: '壓克力立牌' }
+    ];
+
+    function render2D() {
+      ctx.fillStyle = document.getElementById('bgColor').value;
+      ctx.fillRect(0, 0, cvs.width, cvs.height);
+
+      products2D.forEach(p => {
+        ctx.save();
+        ctx.translate(p.x, p.y);
+
+        // 產品陰影
+        ctx.shadowColor = 'rgba(0,0,0,0.45)';
+        ctx.shadowBlur = 18;
+        ctx.shadowOffsetX = 8;
+        ctx.shadowOffsetY = 12;
+
+        if (p.type === 'towel') {
+          ctx.fillStyle = '#f5f5f5';
+          ctx.fillRect(0, 0, p.w, p.h);
+          ctx.shadowColor = 'transparent';
+          // 繪製上傳圖紋
+          if (customImage.complete) {
+            ctx.drawImage(customImage, 10, 10, p.w - 20, p.h - 20);
+          }
+          // 布料纖維紋理模擬
+          ctx.fillStyle = 'rgba(255,255,255,0.08)';
+          for (let i = 0; i < p.w; i += 4) ctx.fillRect(i, 0, 1, p.h);
+        } 
+        else if (p.type === 'card') {
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.roundRect(0, 0, p.w, p.h, 10);
+          ctx.fill();
+          ctx.shadowColor = 'transparent';
+          if (customImage.complete) {
+            ctx.drawImage(customImage, 12, 12, p.w - 24, p.h - 60);
+          }
+          ctx.fillStyle = '#333';
+          ctx.font = '12px sans-serif';
+          ctx.fillText(p.name, 16, p.h - 24);
+        } 
+        else if (p.type === 'standee') {
+          // 壓克力外框半透明晶瑩感
+          ctx.fillStyle = 'rgba(230, 240, 255, 0.4)';
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.roundRect(0, 0, p.w, p.h, 16);
+          ctx.fill();
+          ctx.stroke();
+          ctx.shadowColor = 'transparent';
+          if (customImage.complete) {
+            ctx.drawImage(customImage, 15, 15, p.w - 30, p.h - 30);
+          }
+        }
+        else if (p.type === 'box') {
+          ctx.fillStyle = '#dcd6cd';
+          ctx.fillRect(0, 0, p.w, p.h);
+          ctx.shadowColor = 'transparent';
+          if (customImage.complete) {
+            ctx.drawImage(customImage, p.w * 0.1, p.h * 0.1, p.w * 0.8, p.h * 0.8);
+          }
+        }
+        ctx.restore();
+      });
+    }
+
+    // --- 3D THREE.JS 模型打樣引擎 ---
+    let scene, camera, renderer, controls;
+    let sceneObjects = [];
+    const container3D = document.getElementById('viewport3d');
+
+    function init3D() {
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(45, container3D.clientWidth / container3D.clientHeight, 0.1, 100);
+      camera.position.set(0, 2, 6);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, alpha: true });
+      renderer.setSize(container3D.clientWidth, container3D.clientHeight);
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.shadowMap.enabled = true;
+      container3D.appendChild(renderer.domElement);
+
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+
+      // 攝影棚光照 (三點照明)
+      const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
+      keyLight.position.set(5, 8, 5);
+      keyLight.castShadow = true;
+      scene.add(keyLight);
+
+      const fillLight = new THREE.DirectionalLight(0xffebee, 0.6);
+      fillLight.position.set(-5, 4, 3);
+      scene.add(fillLight);
+
+      const hemiLight = new THREE.HemisphereLight(0xffffff, 0x222233, 0.8);
+      scene.add(hemiLight);
+
+      // 展示底座地面
+      const floor = new THREE.Mesh(
+        new THREE.PlaneGeometry(20, 20),
+        new THREE.MeshStandardMaterial({ color: 0x161619, roughness: 0.9 })
+      );
+      floor.rotation.x = -Math.PI / 2;
+      floor.position.y = -1.2;
+      floor.receiveShadow = true;
+      scene.add(floor);
+
+      build3DScene();
+      animate3D();
+    }
+
+    function build3DScene() {
+      // 清空舊模型
+      sceneObjects.forEach(obj => scene.remove(obj));
+      sceneObjects = [];
+
+      const texLoader = new THREE.TextureLoader();
+      userTexture = texLoader.load(customImage.src);
+
+      const metalness = parseFloat(document.getElementById('metalness').value);
+      const roughness = parseFloat(document.getElementById('roughness').value);
+
+      // 產品 1：應援手幅 (微幅弧形布質曲面)
+      const towelMat = new THREE.MeshStandardMaterial({
+        map: userTexture,
+        roughness: Math.max(roughness, 0.6),
+        metalness: 0.05,
+        side: THREE.DoubleSide
+      });
+      const towelGeo = new THREE.CylinderGeometry(2, 2, 0.9, 32, 1, true, -Math.PI / 6, Math.PI / 3);
+      const towelMesh = new THREE.Mesh(towelGeo, towelMat);
+      towelMesh.position.set(-2, 0, 0);
+      towelMesh.castShadow = true;
+      scene.add(towelMesh);
+      sceneObjects.push(towelMesh);
+
+      // 產品 2：立體小卡包裝
+      const cardMat = new THREE.MeshStandardMaterial({
+        map: userTexture,
+        metalness: metalness,
+        roughness: roughness
+      });
+      const cardGeo = new THREE.BoxGeometry(1.2, 1.7, 0.04);
+      const cardMesh = new THREE.Mesh(cardGeo, cardMat);
+      cardMesh.position.set(0, 0, 0);
+      cardMesh.rotation.y = -0.2;
+      cardMesh.castShadow = true;
+      scene.add(cardMesh);
+      sceneObjects.push(cardMesh);
+
+      // 產品 3：透光壓克力立牌
+      const acrylicMat = new THREE.MeshPhysicalMaterial({
+        map: userTexture,
+        transmission: 0.85,
+        opacity: 1,
+        transparent: true,
+        roughness: 0.1,
+        ior: 1.49,
+        thickness: 0.2
+      });
+      const standeeGeo = new THREE.BoxGeometry(1.1, 1.5, 0.08);
+      const standeeMesh = new THREE.Mesh(standeeGeo, acrylicMat);
+      standeeMesh.position.set(1.9, 0, 0);
+      standeeMesh.rotation.y = 0.3;
+      standeeMesh.castShadow = true;
+      scene.add(standeeMesh);
+      sceneObjects.push(standeeMesh);
+    }
+
+    function animate3D() {
+      requestAnimationFrame(animate3D);
+      if (currentMode === '3d') {
+        controls.update();
+        renderer.render(scene, camera);
+      }
+    }
+
+    // --- 互動功能與切換 ---
+    function switchView(mode) {
+      currentMode = mode;
+      document.getElementById('btn2D').classList.toggle('active', mode === '2d');
+      document.getElementById('btn3D').classList.toggle('active', mode === '3d');
+
+      if (mode === '2d') {
+        cvs.style.display = 'block';
+        container3D.style.display = 'none';
+        render2D();
+      } else {
+        cvs.style.display = 'none';
+        container3D.style.display = 'block';
+        if (!scene) init3D();
+        else {
+          build3DScene();
+          renderer.setSize(container3D.clientWidth, container3D.clientHeight);
+          camera.aspect = container3D.clientWidth / container3D.clientHeight;
+          camera.updateProjectionMatrix();
+        }
+      }
+    }
+
+    // 自訂上傳圖片
+    document.getElementById('imgUpload').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          customImage = new Image();
+          customImage.onload = () => {
+            render2D();
+            if (scene) build3DScene();
+          };
+          customImage.src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // 動態新增 2D 畫布產品
+    function addProduct(type) {
+      const names = { towel: '應援手幅', card: '小卡拍立得', standee: '壓克力立牌', box: '包裝盒' };
+      products2D.push({
+        id: Date.now().toString(),
+        type: type,
+        x: 50 + Math.random() * 300,
+        y: 80 + Math.random() * 200,
+        w: type === 'towel' ? 400 : (type === 'card' ? 180 : 200),
+        h: type === 'towel' ? 160 : (type === 'card' ? 260 : 220),
+        name: names[type]
+      });
+      render2D();
+    }
+
+    // 2D 畫布拖曳互動 (按住移動產品)
+    let selectedItem = null, dragOffsetX = 0, dragOffsetY = 0;
+    cvs.addEventListener('mousedown', (e) => {
+      const rect = cvs.getBoundingClientRect();
+      const scaleX = cvs.width / rect.width;
+      const scaleY = cvs.height / rect.height;
+      const mouseX = (e.clientX - rect.left) * scaleX;
+      const mouseY = (e.clientY - rect.top) * scaleY;
+
+      for (let i = products2D.length - 1; i >= 0; i--) {
+        const p = products2D[i];
+        if (mouseX >= p.x && mouseX <= p.x + p.w && mouseY >= p.y && mouseY <= p.y + p.h) {
+          selectedItem = p;
+          dragOffsetX = mouseX - p.x;
+          dragOffsetY = mouseY - p.y;
+          break;
+        }
+      }
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (selectedItem && currentMode === '2d') {
+        const rect = cvs.getBoundingClientRect();
+        const scaleX = cvs.width / rect.width;
+        const scaleY = cvs.height / rect.height;
+        selectedItem.x = (e.clientX - rect.left) * scaleX - dragOffsetX;
+        selectedItem.y = (e.clientY - rect.top) * scaleY - dragOffsetY;
+        render2D();
+      }
+    });
+
+    window.addEventListener('mouseup', () => { selectedItem = null; });
+
+    // 材質預設切換
+    function applyMaterialPreset() {
+      const p = document.getElementById('matPreset').value;
+      const mInput = document.getElementById('metalness');
+      const rInput = document.getElementById('roughness');
+
+      if (p === 'matte') { mInput.value = 0.05; rInput.value = 0.8; }
+      else if (p === 'glossy') { mInput.value = 0.1; rInput.value = 0.15; }
+      else if (p === 'foil') { mInput.value = 0.95; rInput.value = 0.2; }
+      else if (p === 'acrylic') { mInput.value = 0.0; rInput.value = 0.05; }
+      updateMaterials();
+    }
+
+    function updateMaterials() {
+      if (scene) build3DScene();
+    }
+
+    function changeBg(color) {
+      if (currentMode === '2d') render2D();
+    }
+
+    // 匯出打樣成果圖
+    function exportProof() {
+      const link = document.createElement('a');
+      link.download = '打樣效果圖-' + Date.now() + '.png';
+      if (currentMode === '2d') {
+        link.href = cvs.toDataURL('image/png');
+      } else {
+        link.href = renderer.domElement.toDataURL('image/png');
+      }
+      link.click();
+    }
+
+    // 初始繪製
+    customImage.onload = () => render2D();
+  </script>
+</body>
+</html>
