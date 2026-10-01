@@ -26,6 +26,7 @@
       overflow: hidden;
     }
 
+    /* 頂部導航 */
     header {
       position: absolute;
       top: 0; left: 0; right: 0;
@@ -70,6 +71,7 @@
     }
     .top-tab.active { background: #fff; color: #111; }
 
+    /* 側邊主面板 */
     aside {
       width: 380px;
       height: 100vh;
@@ -338,7 +340,7 @@
         </div>
         <div class="form-row" id="rowPages">
           <label>內頁總頁數 (Pages)</label>
-          <input type="number" id="dimPages" min="2" max="24" value="12" oninput="applyCurrentSettings()">
+          <input type="number" id="dimPages" min="1" max="24" value="5" oninput="onPagesCountChange()">
         </div>
         <div class="form-row" id="rowRadius">
           <label>圓角半徑 (Radius)</label>
@@ -469,7 +471,7 @@
   </main>
 
   <script>
-    // --- 擬真材質與畫布貼圖生成 ---
+    // --- 貼圖生成工具 ---
     function makeArt(text, sub, bg = '#161c28') {
       const c = document.createElement('canvas');
       c.width = 1024; c.height = 1024;
@@ -490,18 +492,21 @@
       return new THREE.CanvasTexture(c);
     }
 
-    // 黑膠唱片：同心圓細紋與標籤，孔洞置中
+    // 黑膠唱片貼圖：中心點嚴格對齊 (512, 512)
     function makeVinylTexture() {
       const c = document.createElement('canvas');
       c.width = 1024; c.height = 1024;
       const ctx = c.getContext('2d');
       ctx.fillStyle = '#0a0a0c';
       ctx.fillRect(0, 0, 1024, 1024);
+
+      // 同心圓軌道
       for (let r = 210; r < 500; r += 2) {
         ctx.strokeStyle = `rgba(255,255,255,${0.03 + (r % 6 === 0 ? 0.05 : 0)})`;
         ctx.lineWidth = 1;
         ctx.beginPath(); ctx.arc(512, 512, r, 0, Math.PI * 2); ctx.stroke();
       }
+      // 中心圓標籤
       ctx.fillStyle = '#f4f1ea';
       ctx.beginPath(); ctx.arc(512, 512, 175, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = '#111';
@@ -513,17 +518,17 @@
       return new THREE.CanvasTexture(c);
     }
 
-    // CD 光碟：純銀白金屬反光質感 (非綠色)
+    // CD 光碟：純銀白金屬反光質感
     function makeCDTexture() {
       const c = document.createElement('canvas');
       c.width = 1024; c.height = 1024;
       const ctx = c.getContext('2d');
-      ctx.fillStyle = '#dce1e8';
+      ctx.fillStyle = '#d8dee6';
       ctx.fillRect(0, 0, 1024, 1024);
 
       const grad = ctx.createRadialGradient(512, 512, 100, 512, 512, 512);
       grad.addColorStop(0, '#f8fafc');
-      grad.addColorStop(0.5, '#c5cbd4');
+      grad.addColorStop(0.5, '#c0c7d0');
       grad.addColorStop(1, '#e2e8f0');
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, 1024, 1024);
@@ -562,14 +567,12 @@
       return products.find(p => p.id === selectedId) || products[0];
     }
 
-    // 自動計算不重疊的排列 X 座標
     function calculateAutoX() {
       let currentX = 0;
-      products.forEach((p, idx) => {
+      products.forEach((p) => {
         p.pos3D.x = currentX;
-        currentX += (p.w / 100) + 1.2; // 寬度加上安全間隔
+        currentX += (p.w / 100) + 1.2;
       });
-      // 置中整個場景
       const centerX = (currentX - 1.2) / 2;
       products.forEach(p => p.pos3D.x -= centerX);
     }
@@ -670,14 +673,14 @@
           jacket.castShadow = true; jacket.receiveShadow = true;
           itemRoot.add(jacket);
 
-          // 黑膠唱片：Shape 幾何體正中心空洞
+          // 黑膠唱片幾何：以 (0,0) 為圓心建立孔洞
           const recShape = new THREE.Shape();
           recShape.absarc(0, 0, w * 0.46, 0, Math.PI * 2, false);
           const hole = new THREE.Path();
           hole.absarc(0, 0, 0.035, 0, Math.PI * 2, true);
           recShape.holes.push(hole);
 
-          const recGeo = new THREE.ExtrudeGeometry(recShape, { depth: 0.015, bevelEnabled: false, curveSegments: 64 });
+          const recGeo = new THREE.ExtrudeGeometry(recShape, { depth: 0.012, bevelEnabled: false, curveSegments: 64 });
           recGeo.center();
 
           const recMat = new THREE.MeshStandardMaterial({
@@ -686,8 +689,7 @@
             roughness: 0.25
           });
           const disc = new THREE.Mesh(recGeo, recMat);
-          // 垂直平行於封套內部，不旋轉成水平面
-          disc.rotation.set(0, 0, 0);
+          disc.rotation.set(0, 0, 0); // 垂直封套內部，不水平穿透
           disc.position.set(0, 0, 0);
           disc.castShadow = true; disc.receiveShadow = true;
           disc.name = 'disc';
@@ -713,7 +715,7 @@
           backInlay.position.z = -spine * 0.24;
           baseGroup.add(backInlay);
 
-          // CD 光碟：精確嵌在底座中央托盤
+          // CD 光碟片：精準嵌在底座中央托盤內部
           const cdShape = new THREE.Shape();
           cdShape.absarc(0, 0, w * 0.42, 0, Math.PI * 2, false);
           const cdHole = new THREE.Path();
@@ -782,58 +784,68 @@
           itemRoot.add(digiGroup);
         }
         else if (p.type === 'calendar_desk') {
-          // 桌曆：三角厚紙立體底座 + 頂部金屬雙線圈 + 多頁上翻
+          // 桌曆：厚紙倒 V 型三角底座 + 頂部金屬雙線圈 + 多頁上翻
           const calRoot = new THREE.Group();
-          calRoot.position.y = h / 2;
+          const slantAngle = 0.18;
+          const legLen = h * 0.96;
+          const baseY = (legLen * Math.cos(slantAngle)) / 2;
+          calRoot.position.y = baseY;
 
-          // 三角底座支架 (具有底折與斜面厚度)
-          const baseMat = new THREE.MeshStandardMaterial({ color: 0xefede8, roughness: 0.85 });
-          const baseThick = 0.02;
-          const slantAngle = 0.22; // 傾斜夾角
-          const legLen = h * 0.98;
+          const baseMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.7 });
 
-          // 前背板
-          const frontBacking = new THREE.Mesh(new THREE.BoxGeometry(w, legLen, baseThick), baseMat);
-          frontBacking.rotation.x = slantAngle;
-          frontBacking.position.set(0, 0, -legLen * Math.sin(slantAngle) / 2);
-          calRoot.add(frontBacking);
+          // 前傾斜底板
+          const frontBoard = new THREE.Mesh(new THREE.BoxGeometry(w, legLen, 0.02), baseMat);
+          frontBoard.rotation.x = slantAngle;
+          frontBoard.position.set(0, 0, -legLen * Math.sin(slantAngle) / 2);
+          calRoot.add(frontBoard);
 
-          // 後支撐板
-          const rearBacking = new THREE.Mesh(new THREE.BoxGeometry(w, legLen, baseThick), baseMat);
-          rearBacking.rotation.x = -slantAngle;
-          rearBacking.position.set(0, 0, -legLen * Math.sin(slantAngle) * 1.5);
-          calRoot.add(rearBacking);
+          // 後傾斜底板
+          const rearBoard = new THREE.Mesh(new THREE.BoxGeometry(w, legLen, 0.02), baseMat);
+          rearBoard.rotation.x = -slantAngle;
+          rearBoard.position.set(0, 0, -legLen * Math.sin(slantAngle) * 1.5);
+          calRoot.add(rearBoard);
 
-          // 頂部金屬裝訂線圈 (Twin-Ring Wire-O)
+          // 底部折疊連桿
+          const bottomLink = new THREE.Mesh(new THREE.BoxGeometry(w, 0.015, legLen * Math.sin(slantAngle)), baseMat);
+          bottomLink.position.set(0, -baseY + 0.01, -legLen * Math.sin(slantAngle));
+          calRoot.add(bottomLink);
+
+          // 頂部金屬雙線圈
           const ringsCount = 18;
           const coilRoot = new THREE.Group();
-          coilRoot.position.set(-w / 2 + 0.05, legLen * Math.cos(slantAngle) / 2 + 0.02, 0);
-          const coilGeo = new THREE.TorusGeometry(0.04, 0.007, 8, 24);
-          const coilMat = new THREE.MeshStandardMaterial({ color: 0xd8d8d8, metalness: 0.9, roughness: 0.2 });
-          
+          const topHingeY = legLen * Math.cos(slantAngle) / 2;
+          coilRoot.position.set(-w / 2 + 0.04, topHingeY, 0.01);
+          const coilGeo = new THREE.TorusGeometry(0.035, 0.005, 8, 24);
+          const coilMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.9, roughness: 0.15 });
+
           for (let i = 0; i < ringsCount; i++) {
             const ringMesh = new THREE.Mesh(coilGeo, coilMat);
-            ringMesh.position.x = (i / (ringsCount - 1)) * (w - 0.1);
+            ringMesh.position.x = (i / (ringsCount - 1)) * (w - 0.08);
             ringMesh.rotation.y = Math.PI / 2;
             coilRoot.add(ringMesh);
           }
           calRoot.add(coilRoot);
 
-          // 多頁連續翻動系統
+          // 多頁連續上翻系統
           const pagesGroup = new THREE.Group();
           pagesGroup.name = 'pagesGroup';
-          const totalPages = p.pages || 12;
-          const pageCount = Math.min(totalPages, 8); // 3D 中渲染前 8 頁物理層疊
+          const totalPages = p.pages || 5;
 
-          for (let k = 0; k < pageCount; k++) {
+          for (let k = 0; k < totalPages; k++) {
             const pageHinge = new THREE.Group();
-            pageHinge.position.set(0, legLen * Math.cos(slantAngle) / 2, 0.02 + k * 0.002);
+            pageHinge.position.set(0, topHingeY, 0.015 + k * 0.002);
             pageHinge.userData.index = k;
 
-            const pageSheet = new THREE.Mesh(
-              new THREE.PlaneGeometry(w * 0.94, legLen * 0.94),
-              k === 0 ? frontMat : (k === 1 ? insideMat : backMat)
-            );
+            // 綁定動態獨立頁面貼圖
+            const pageTexture = (k === 0) ? p.textures.front : (p.textures['page_' + k] || p.textures.inside || frontMat.map);
+            const sheetMat = new THREE.MeshStandardMaterial({
+              map: pageTexture,
+              metalness: p.metalness,
+              roughness: p.roughness,
+              side: THREE.DoubleSide
+            });
+
+            const pageSheet = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.96, legLen * 0.95), sheetMat);
             pageSheet.rotation.x = slantAngle;
             pageSheet.position.set(0, -legLen * Math.cos(slantAngle) / 2, 0);
             pageHinge.add(pageSheet);
@@ -843,7 +855,7 @@
           itemRoot.add(calRoot);
         }
         else if (p.type === 'notebook') {
-          // 多頁筆記本：左側翻動
+          // 筆記本：多頁左翻
           const nbRoot = new THREE.Group();
           nbRoot.position.y = h / 2;
 
@@ -853,18 +865,21 @@
 
           const pagesGroup = new THREE.Group();
           pagesGroup.name = 'pagesGroup';
-          const totalPages = p.pages || 12;
-          const pageCount = Math.min(totalPages, 8);
+          const totalPages = p.pages || 5;
 
-          for (let k = 0; k < pageCount; k++) {
+          for (let k = 0; k < totalPages; k++) {
             const pageHinge = new THREE.Group();
-            pageHinge.position.set(0, 0, spine * 0.2 + k * 0.003);
+            pageHinge.position.set(0, 0, spine * 0.2 + k * 0.004);
             pageHinge.userData.index = k;
 
-            const sheet = new THREE.Mesh(
-              new THREE.BoxGeometry(w, h, 0.006),
-              k === 0 ? frontMat : (k === 1 ? insideMat : backMat)
-            );
+            const pageTexture = (k === 0) ? p.textures.front : (p.textures['page_' + k] || p.textures.inside || frontMat.map);
+            const sheetMat = new THREE.MeshStandardMaterial({
+              map: pageTexture,
+              metalness: p.metalness,
+              roughness: p.roughness
+            });
+
+            const sheet = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.005), sheetMat);
             sheet.position.set(w / 2, 0, 0);
             pageHinge.add(sheet);
             pagesGroup.add(pageHinge);
@@ -906,12 +921,11 @@
           if (disc) disc.position.x = val * (curr.w / 100) * 0.85; // 黑膠水平向右滑出
         }
         else if (curr.type === 'calendar_desk') {
-          // 桌曆多頁連續接力上翻
+          // 桌曆多頁接力上翻
           const pg = itemGroup.getObjectByName('pagesGroup');
           if (pg) {
             const count = pg.children.length;
             pg.children.forEach((hinge, idx) => {
-              // 依進度依序翻開
               const start = idx / count;
               const end = (idx + 1) / count;
               const pVal = Math.min(Math.max((val - start) / (end - start), 0), 1);
@@ -920,7 +934,7 @@
           }
         }
         else if (curr.type === 'notebook') {
-          // 筆記本多頁連續接力左翻
+          // 筆記本多頁接力左翻
           const pg = itemGroup.getObjectByName('pagesGroup');
           if (pg) {
             const count = pg.children.length;
@@ -1110,7 +1124,7 @@
           ctx.restore();
         }
 
-        // 封面主體
+        // 封面本體
         ctx.fillStyle = '#fff';
         ctx.fillRect(0, 0, p.w, p.h);
         if (p.textures.front && p.textures.front.image) {
@@ -1138,7 +1152,7 @@
       const mx = (e.clientX - r.left - vt.x) / vt.scale;
       const my = (e.clientY - r.top - vt.y) / vt.scale;
 
-      // 嚴格僅判定點選中的那一個單獨品項
+      // 嚴格僅判定點選中的單一品項
       for (let i = products.length - 1; i >= 0; i--) {
         const p = products[i];
         if (mx >= p.pos2D.x && mx <= p.pos2D.x + p.w && my >= p.pos2D.y && my <= p.pos2D.y + p.h) {
@@ -1194,7 +1208,7 @@
       document.getElementById('dimH').value = p.h;
       document.getElementById('dimSpine').value = p.spine;
       document.getElementById('dimRadius').value = p.radius;
-      document.getElementById('dimPages').value = p.pages || 12;
+      document.getElementById('dimPages').value = p.pages || 5;
       document.getElementById('metalness').value = p.metalness;
       document.getElementById('roughness').value = p.roughness;
 
@@ -1207,6 +1221,13 @@
       if (currentView === 'die') renderDieCanvas();
       if (currentView === '2d') render2DCanvas();
       setCameraAngle('iso');
+    }
+
+    function onPagesCountChange() {
+      const p = getSelectedProduct();
+      p.pages = parseInt(document.getElementById('dimPages').value) || 5;
+      syncUploadBoxes();
+      buildAll3DModels();
     }
 
     function syncUploadBoxes() {
@@ -1235,11 +1256,15 @@
           { key: 'disc', label: 'CD 實體光碟盤面' }
         ];
       } else if (p.type === 'calendar_desk' || p.type === 'notebook') {
+        // 多頁獨立貼圖支援
+        const total = p.pages || 5;
         parts = [
-          { key: 'front', label: '封面 (Cover)' },
-          { key: 'inside', label: '內頁正面 (Page Front)' },
-          { key: 'back', label: '封底 (Back)' }
+          { key: 'front', label: '封面 (第 1 頁)' }
         ];
+        for (let i = 1; i < total; i++) {
+          parts.push({ key: 'page_' + i, label: `內頁 (第 ${i + 1} 頁)` });
+        }
+        parts.push({ key: 'back', label: '封底' });
       }
 
       parts.forEach(pt => {
@@ -1255,8 +1280,8 @@
         vinyl: { w: 314, h: 314, spine: 6, r: 0, tex: { front: makeArt('MIDNIGHT', 'LUNA HARBOR', '#161c28'), back: makeArt('TRACKLIST', '1. Harbor Lights', '#1e2430'), disc: makeVinylTexture() } },
         cd_digipak: { w: 140, h: 125, spine: 8, r: 0, tex: { front: makeArt('DIGIPAK', 'SINGLE', '#232b36'), back: makeArt('LYRICS', 'BOOKLET', '#1a2233'), inside: makeArt('INSIDE', 'ART', '#28313e'), disc: makeCDTexture() } },
         cd_jewel: { w: 142, h: 125, spine: 10, r: 2, tex: { front: makeArt('JEWEL', 'CASE', '#2a3342'), back: makeArt('BACK INLAY', 'BARCODE', '#1f242e'), disc: makeCDTexture() } },
-        calendar_desk: { w: 150, h: 210, spine: 25, r: 0, pages: 12, tex: { front: makeArt('2027 CALENDAR', 'DESK EDITION', '#3a2e2b'), inside: makeArt('JANUARY', 'MONTH 01', '#282b36') } },
-        notebook: { w: 148, h: 210, spine: 14, r: 4, pages: 24, tex: { front: makeArt('NOTEBOOK', 'JOURNAL', '#2e382b'), inside: makeArt('PAGE 01', 'NOTES', '#f2ede4') } },
+        calendar_desk: { w: 150, h: 210, spine: 25, r: 0, pages: 5, tex: { front: makeArt('2027 CALENDAR', 'DESK EDITION', '#3a2e2b') } },
+        notebook: { w: 148, h: 210, spine: 14, r: 4, pages: 5, tex: { front: makeArt('NOTEBOOK', 'JOURNAL', '#2e382b') } },
         photocard: { w: 55, h: 85, spine: 0.5, r: 4, tex: { front: makeArt('PHOTO', 'CARD', '#382228'), back: makeArt('AUTOGRAPH', 'SPECIAL', '#201618') } },
         postcard: { w: 148, h: 100, spine: 0.5, r: 0, tex: { front: makeArt('POSTCARD', 'EDITION', '#25292e'), back: makeArt('STAMP HERE', 'POSTAL', '#e8e8e8') } }
       };
@@ -1267,7 +1292,7 @@
         type: type,
         w: base.w, h: base.h, spine: base.spine, radius: base.r, pages: base.pages || 1,
         metalness: 0.05, roughness: 0.65,
-        pos3D: { x: 0, y: 0, z: 0 },
+        pos3D: { x: (products.length) * 3.8, y: 0, z: 0 },
         pos2D: { x: 100 + products.length * 180, y: 150 },
         textures: { ...base.tex }
       };
