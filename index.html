@@ -26,7 +26,6 @@
       overflow: hidden;
     }
 
-    /* 頂部導航 */
     header {
       position: absolute;
       top: 0; left: 0; right: 0;
@@ -71,7 +70,6 @@
     }
     .top-tab.active { background: #fff; color: #111; }
 
-    /* 側邊主面板 */
     aside {
       width: 380px;
       height: 100vh;
@@ -220,7 +218,6 @@
     .chip.active { border-color: var(--accent); color: var(--accent); font-weight: 600; }
     .chip .del { font-weight: bold; cursor: pointer; color: #ff5252; margin-left: 2px; }
 
-    /* 主舞台 */
     main {
       flex: 1;
       position: relative;
@@ -237,7 +234,6 @@
       width: 100%;
       height: 100%;
       display: none;
-      cursor: default;
     }
 
     .bottom-bar {
@@ -342,6 +338,25 @@
           <label>圓角半徑 (Radius)</label>
           <input type="number" id="dimRadius" oninput="applyCurrentSettings()">
         </div>
+
+        <div class="sec-h" style="margin-top:14px;">展開圖刀模出血設定</div>
+        <div class="form-row">
+          <label>出血尺寸</label>
+          <div style="display:flex; gap:4px; align-items:center;">
+            <input type="number" id="bleedVal" value="3" style="width:55px;" oninput="applyCurrentSettings()">
+            <select id="bleedUnit" style="width:55px;" onchange="applyCurrentSettings()">
+              <option value="mm">mm</option>
+              <option value="cm">cm</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>出血線位置</label>
+          <select id="bleedPos" onchange="applyCurrentSettings()">
+            <option value="outside">產品外部 (外擴出血)</option>
+            <option value="inside">產品內部 (內縮安全線)</option>
+          </select>
+        </div>
       </div>
 
       <!-- 步驟 2: 材質工藝 -->
@@ -355,7 +370,7 @@
           <button class="pill-btn" id="btn_mat_pearl" onclick="setPaper('pearl')">珠光紙</button>
           <button class="pill-btn" id="btn_mat_clear" onclick="setPaper('clear')">透明壓克力</button>
         </div>
-        <div class="sec-h">微調參數 (即時反饋)</div>
+        <div class="sec-h">微調參數 (即時生效)</div>
         <div class="form-row">
           <label>金屬光澤感</label>
           <input type="range" id="metalness" min="0" max="1" step="0.05" oninput="applyCurrentSettings()">
@@ -402,28 +417,9 @@
         </div>
       </div>
 
-      <!-- 步驟 5: 輸出圖片 & 展開圖出血 -->
+      <!-- 步驟 5: 輸出圖片 -->
       <div id="step-4" class="step-content" style="display:none;">
-        <div class="sec-h">展開圖刀模出血設定</div>
-        <div class="form-row">
-          <label>出血尺寸</label>
-          <div style="display:flex; gap:4px; align-items:center;">
-            <input type="number" id="bleedVal" value="3" style="width:55px;" oninput="renderDieCanvas()">
-            <select id="bleedUnit" style="width:55px;" onchange="renderDieCanvas()">
-              <option value="mm">mm</option>
-              <option value="cm">cm</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-row">
-          <label>出血線位置</label>
-          <select id="bleedPos" onchange="renderDieCanvas()">
-            <option value="outside">產品外部 (外擴出血)</option>
-            <option value="inside">產品內部 (內縮安全線)</option>
-          </select>
-        </div>
-
-        <div class="sec-h" style="margin-top:14px;">匯出圖片規格</div>
+        <div class="sec-h">匯出規格</div>
         <div class="form-row">
           <label>版面尺寸</label>
           <select id="exportRatio">
@@ -467,7 +463,7 @@
   </main>
 
   <script>
-    // --- 貼圖生成輔助 ---
+    // --- 貼圖生成工具 ---
     function makeArt(text, sub, bg = '#161c28') {
       const c = document.createElement('canvas');
       c.width = 1024; c.height = 1024;
@@ -510,35 +506,36 @@
       return new THREE.CanvasTexture(c);
     }
 
+    // 真實白銀金屬 CD 盤面紋理 (非綠色)
     function makeCDTexture() {
       const c = document.createElement('canvas');
       c.width = 1024; c.height = 1024;
       const ctx = c.getContext('2d');
-      ctx.fillStyle = '#c8d0d8';
+      // 銀白光碟鏡面
+      ctx.fillStyle = '#dce1e8';
       ctx.fillRect(0, 0, 1024, 1024);
-      const grad = ctx.createConicGradient(0, 512, 512);
-      grad.addColorStop(0, 'rgba(255, 100, 100, 0.45)');
-      grad.addColorStop(0.2, 'rgba(255, 255, 100, 0.45)');
-      grad.addColorStop(0.4, 'rgba(100, 255, 100, 0.45)');
-      grad.addColorStop(0.6, 'rgba(100, 255, 255, 0.45)');
-      grad.addColorStop(0.8, 'rgba(200, 100, 255, 0.45)');
-      grad.addColorStop(1, 'rgba(255, 100, 100, 0.45)');
+      // 光學微細彩光
+      const grad = ctx.createRadialGradient(512, 512, 100, 512, 512, 512);
+      grad.addColorStop(0, '#f5f7fa');
+      grad.addColorStop(0.5, '#c5cbd4');
+      grad.addColorStop(1, '#e3e8f0');
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, 1024, 1024);
 
+      // 上半絲印
       ctx.fillStyle = '#1c2438';
       ctx.beginPath();
       ctx.arc(512, 512, 490, Math.PI, Math.PI * 2);
       ctx.arc(512, 512, 190, Math.PI * 2, Math.PI, true);
       ctx.fill();
       ctx.fillStyle = '#fff';
-      ctx.font = 'bold 32px sans-serif';
+      ctx.font = 'bold 34px sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText('LUNA HARBOR', 512, 360);
       return new THREE.CanvasTexture(c);
     }
 
-    // --- 多產品資料陣列 ---
+    // --- 資料結構 ---
     let products = [
       {
         id: 'p1',
@@ -546,7 +543,7 @@
         w: 314, h: 314, spine: 6, radius: 0,
         metalness: 0.05, roughness: 0.65,
         pos3D: { x: 0, y: 0, z: 0 },
-        pos2D: { x: 200, y: 200 },
+        pos2D: { x: 120, y: 150 },
         textures: {
           front: makeArt('MIDNIGHT ROUTE', 'LUNA HARBOR', '#161c28'),
           back: makeArt('TRACKLIST', '1. Harbor Lights\n2. Low Tide', '#1e2430'),
@@ -560,7 +557,7 @@
       return products.find(p => p.id === selectedId) || products[0];
     }
 
-    // --- 3D 引擎 (Three.js) ---
+    // --- 3D 渲染系統 (Three.js) ---
     let scene, camera, renderer, controls, studioRoot, groundMesh;
     let keyLight, fillLight, rimLight;
 
@@ -581,10 +578,9 @@
       controls = new THREE.OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
       controls.dampingFactor = 0.05;
-      controls.screenSpacePanning = true; // 支援順暢平移拖曳
+      controls.screenSpacePanning = true;
       controls.maxPolarAngle = Math.PI / 2 + 0.02;
 
-      // 燈光
       keyLight = new THREE.DirectionalLight(0xfff7ea, 2.0);
       keyLight.position.set(5, 8, 5);
       keyLight.castShadow = true;
@@ -602,7 +598,6 @@
 
       scene.add(new THREE.AmbientLight(0xffffff, 0.45));
 
-      // 地板接觸陰影
       const gGeo = new THREE.PlaneGeometry(60, 60);
       const gMat = new THREE.ShadowMaterial({ opacity: 0.45 });
       groundMesh = new THREE.Mesh(gGeo, gMat);
@@ -651,7 +646,7 @@
           jacket.castShadow = true; jacket.receiveShadow = true;
           itemRoot.add(jacket);
 
-          // 黑膠唱片：孔洞絕對正中心
+          // 黑膠唱片：Shape 幾何體中心校正
           const recShape = new THREE.Shape();
           recShape.absarc(0, 0, w * 0.46, 0, Math.PI * 2, false);
           const hole = new THREE.Path();
@@ -674,7 +669,7 @@
           jacket.add(disc);
         }
         else if (p.type === 'cd_jewel') {
-          // CD 寶麗盒 (硬質透明塑膠殼)
+          // CD 寶麗盒 (硬質透明塑膠盒)
           const baseGroup = new THREE.Group();
           baseGroup.position.y = h / 2;
 
@@ -683,17 +678,17 @@
             roughness: 0.05, ior: 1.5, thickness: 0.08
           });
 
-          // 透明底托
+          // 底座
           const bottomCase = new THREE.Mesh(new THREE.BoxGeometry(w, h, spine * 0.5), acrylMat);
           bottomCase.position.z = -spine * 0.25;
           baseGroup.add(bottomCase);
 
-          // 托盤底紙 (封底)
+          // 底紙 (封底)
           const backInlay = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.96, h * 0.96), backMat);
           backInlay.position.z = -spine * 0.24;
           baseGroup.add(backInlay);
 
-          // CD 光碟 (帶中心孔洞)
+          // CD 光碟 (白銀高反光材質，非綠色)
           const cdShape = new THREE.Shape();
           cdShape.absarc(0, 0, w * 0.42, 0, Math.PI * 2, false);
           const cdHole = new THREE.Path();
@@ -704,7 +699,7 @@
           cdGeo.center();
           const cdMesh = new THREE.Mesh(cdGeo, new THREE.MeshStandardMaterial({
             map: p.textures.disc || makeCDTexture(),
-            metalness: 0.85, roughness: 0.15
+            metalness: 0.95, roughness: 0.1
           }));
           cdMesh.position.z = 0.01;
           baseGroup.add(cdMesh);
@@ -744,7 +739,7 @@
           cdGeo.center();
           const cdMesh = new THREE.Mesh(cdGeo, new THREE.MeshStandardMaterial({
             map: p.textures.disc || makeCDTexture(),
-            metalness: 0.85, roughness: 0.15
+            metalness: 0.95, roughness: 0.1
           }));
           cdMesh.position.set(w / 2, 0, spine * 0.25);
           digiGroup.add(cdMesh);
@@ -830,7 +825,7 @@
       let isPanning = false, startPos = { x: 0, y: 0 };
 
       canvas.addEventListener('mousedown', e => {
-        if (e.button === 0 || e.button === 1) {
+        if (e.button === 1 || (e.button === 0 && !drag2DItem)) {
           isPanning = true;
           startPos = { x: e.clientX - viewTransform[viewKey].x, y: e.clientY - viewTransform[viewKey].y };
         }
@@ -990,7 +985,7 @@
       ctx.restore();
     }
 
-    // --- 2D 拖曳單項排版 ---
+    // --- 2D 拖曳單項排版 (精確單一移動) ---
     let drag2DItem = null, offset2D = { x: 0, y: 0 };
     const cvs2D = document.getElementById('canvas2d');
     cvs2D.addEventListener('mousedown', e => {
@@ -1150,7 +1145,6 @@
       alert('✔ 所有設定已即時保存並套用至各打樣視圖！');
     }
 
-    // --- 圖稿獨立上傳 ---
     let uploadTarget = 'front';
     function triggerUpload(target) {
       uploadTarget = target;
@@ -1177,7 +1171,6 @@
       reader.readAsDataURL(file);
     });
 
-    // --- 頂部視圖切換 ---
     let currentView = '3d';
     function setViewMode(mode) {
       currentView = mode;
@@ -1204,7 +1197,6 @@
       document.querySelectorAll('.step-content').forEach((p, i) => p.style.display = i === idx ? 'block' : 'none');
     }
 
-    // --- 背景與材質 ---
     function updateCustomBg(color) {
       renderer.setClearColor(color, 1);
       if (currentView === '2d') render2DCanvas();
