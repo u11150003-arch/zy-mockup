@@ -394,12 +394,12 @@
       <div id="step-1" class="step-content" style="display:none;">
         <div class="sec-h">材質紋理預設</div>
         <div class="grid-3" style="margin-bottom: 14px;">
-          <button class="pill-btn active" onclick="setPaper('coated')">銅版紙</button>
-          <button class="pill-btn" onclick="setPaper('matte')">雪銅紙</button>
-          <button class="pill-btn" onclick="setPaper('kraft')">牛皮紙</button>
-          <button class="pill-btn" onclick="setPaper('holotech')">雷射金屬</button>
-          <button class="pill-btn" onclick="setPaper('pearl')">珠光紙</button>
-          <button class="pill-btn" onclick="setPaper('clear')">透明壓克力</button>
+          <button class="pill-btn active" id="btn_mat_coated" onclick="setPaper('coated')">銅版紙</button>
+          <button class="pill-btn" id="btn_mat_matte" onclick="setPaper('matte')">雪銅紙</button>
+          <button class="pill-btn" id="btn_mat_kraft" onclick="setPaper('kraft')">牛皮紙</button>
+          <button class="pill-btn" id="btn_mat_holotech" onclick="setPaper('holotech')">雷射金屬</button>
+          <button class="pill-btn" id="btn_mat_pearl" onclick="setPaper('pearl')">珠光紙</button>
+          <button class="pill-btn" id="btn_mat_clear" onclick="setPaper('clear')">透明壓克力</button>
         </div>
         <div class="sec-h">微調參數</div>
         <div class="form-row">
@@ -432,10 +432,14 @@
           </select>
         </div>
         <div class="form-row">
-          <label>光源旋轉角度</label>
+          <label>光源方向旋轉</label>
           <input type="range" id="lightAngle" min="0" max="360" value="45" oninput="updateLighting()">
         </div>
-        <div class="sec-h" style="margin-top: 14px;">背景真實材質</div>
+        <div class="form-row">
+          <label>光源強度</label>
+          <input type="range" id="lightIntensity" min="0.2" max="3.5" step="0.1" value="1.8" oninput="updateLighting()">
+        </div>
+        <div class="sec-h" style="margin-top: 14px;">背景與陰影設定</div>
         <div class="form-row">
           <label>自訂環境底色</label>
           <input type="color" id="customBgColor" value="#14151a" oninput="updateCustomBg(this.value)">
@@ -446,6 +450,7 @@
           <button class="pill-btn" id="btn_bg_linen" onclick="setBgPreset('linen')">棉麻布紋</button>
           <button class="pill-btn" id="btn_bg_transparent" onclick="setBgPreset('transparent')">透明 (PNG 陰影)</button>
         </div>
+        <button class="pill-btn" id="btn_no_shadow" style="width:100%; margin-top:8px;" onclick="toggleShadows()">無陰影模式 (切換)</button>
       </div>
 
       <!-- 步驟 5: 輸出圖片 -->
@@ -480,8 +485,8 @@
 
     <div class="bottom-bar" id="bottomBar">
       <div class="angle-btns">
-        <button class="angle-btn" onclick="setCameraAngle('top')">俯視平放</button>
-        <button class="angle-btn active" onclick="setCameraAngle('iso')">展台立視 (45°)</button>
+        <button class="angle-btn" onclick="setCameraAngle('top')">俯視</button>
+        <button class="angle-btn active" onclick="setCameraAngle('iso')">斜 45°</button>
         <button class="angle-btn" onclick="setCameraAngle('flat')">平放地面</button>
         <button class="angle-btn" onclick="setCameraAngle('low')">低角度</button>
         <button class="angle-btn" onclick="setCameraAngle('side')">側面</button>
@@ -518,6 +523,7 @@
       return tex;
     }
 
+    // 黑膠唱片貼圖：嚴格對齊 (512, 512)，中心孔洞與圓形標籤完美置中
     function makeVinylTexture() {
       const c = document.createElement('canvas');
       c.width = 1024; c.height = 1024;
@@ -543,6 +549,7 @@
       return tex;
     }
 
+    // CD 光碟：真實銀白金屬反光材質 (中心精準留空)
     function makeCDTexture() {
       const c = document.createElement('canvas');
       c.width = 1024; c.height = 1024;
@@ -599,6 +606,7 @@
     }
 
     let isFlatMode = false;
+    let shadowsEnabled = true;
     let products = [
       {
         id: 'p1',
@@ -649,7 +657,7 @@
       renderer.setSize(container.clientWidth, container.clientHeight);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.shadowMap.enabled = true;
-      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap; // 柔和接觸投影
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.0;
       container.appendChild(renderer.domElement);
@@ -665,6 +673,7 @@
       keyLight.castShadow = true;
       keyLight.shadow.mapSize.set(2048, 2048);
       keyLight.shadow.bias = -0.0001;
+      keyLight.shadow.radius = 3;
       scene.add(keyLight);
 
       fillLight = new THREE.DirectionalLight(0xdbe6ff, 0.8);
@@ -675,7 +684,7 @@
       rimLight.position.set(0, 6, -6);
       scene.add(rimLight);
 
-      scene.add(new THREE.AmbientLight(0xffffff, 0.45));
+      scene.add(new THREE.AmbientLight(0xffffff, 0.5));
 
       const gGeo = new THREE.PlaneGeometry(80, 80);
       const gMat = new THREE.MeshStandardMaterial({
@@ -787,7 +796,7 @@
           const jacketMatArr = [backMat, backMat, backMat, backMat, frontMat, backMat];
           const jacket = new THREE.Mesh(new THREE.BoxGeometry(w, h, spine), jacketMatArr);
           jacket.position.y = h / 2;
-          jacket.castShadow = true; jacket.receiveShadow = true;
+          jacket.castShadow = shadowsEnabled; jacket.receiveShadow = shadowsEnabled;
           itemRoot.add(jacket);
 
           // 黑膠唱片：嚴格對稱居中圓孔
@@ -808,7 +817,7 @@
           const disc = new THREE.Mesh(recGeo, recMat);
           disc.rotation.set(0, 0, 0);
           disc.position.set(0, 0, 0);
-          disc.castShadow = true; disc.receiveShadow = true;
+          disc.castShadow = shadowsEnabled; disc.receiveShadow = shadowsEnabled;
           disc.name = 'disc';
           jacket.add(disc);
         }
@@ -845,7 +854,7 @@
             metalness: 0.95, roughness: 0.1
           }));
           cdMesh.position.set(0, 0, 0.01);
-          cdMesh.castShadow = true;
+          cdMesh.castShadow = shadowsEnabled;
           baseGroup.add(cdMesh);
 
           // 左鉸鏈翻蓋：閉合時正面歌詞本朝前完全遮蔽光碟
@@ -854,7 +863,7 @@
 
           const lidMesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, spine * 0.4), acrylMat);
           lidMesh.position.set(w / 2, 0, 0);
-          lidMesh.castShadow = true;
+          lidMesh.castShadow = shadowsEnabled;
 
           const booklet = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.94, h * 0.94), frontMat);
           booklet.position.set(w / 2, 0, -spine * 0.18);
@@ -871,7 +880,7 @@
           // 右托盤內頁
           const rightPage = new THREE.Mesh(new THREE.BoxGeometry(w, h, spine * 0.4), insideMat);
           rightPage.position.x = w / 2;
-          rightPage.castShadow = true; rightPage.receiveShadow = true;
+          rightPage.castShadow = shadowsEnabled; rightPage.receiveShadow = shadowsEnabled;
           digiGroup.add(rightPage);
 
           // 光碟置於右內頁
@@ -887,7 +896,7 @@
             metalness: 0.95, roughness: 0.1
           }));
           cdMesh.position.set(w / 2, 0, spine * 0.22);
-          cdMesh.castShadow = true;
+          cdMesh.castShadow = shadowsEnabled;
           digiGroup.add(cdMesh);
 
           // 左封面翻蓋：從前方開合，未開時正面完全朝外遮擋 CD
@@ -896,7 +905,7 @@
 
           const leftPage = new THREE.Mesh(new THREE.BoxGeometry(w, h, spine * 0.35), [backMat, backMat, backMat, backMat, frontMat, backMat]);
           leftPage.position.set(w / 2, 0, 0);
-          leftPage.castShadow = true;
+          leftPage.castShadow = shadowsEnabled;
           leftHinge.add(leftPage);
           leftHinge.name = 'hinge';
 
@@ -924,7 +933,7 @@
           const standMesh = new THREE.Mesh(standGeo, standMat);
           standMesh.rotation.y = Math.PI / 2;
           standMesh.position.y = standHeight / 2;
-          standMesh.castShadow = true; standMesh.receiveShadow = true;
+          standMesh.castShadow = shadowsEnabled; standMesh.receiveShadow = shadowsEnabled;
           calRoot.add(standMesh);
 
           // 頂部金屬線圈
@@ -938,7 +947,7 @@
             const ringMesh = new THREE.Mesh(coilGeo, coilMat);
             ringMesh.position.x = (i / (ringsCount - 1)) * (w - 0.08);
             ringMesh.rotation.y = Math.PI / 2;
-            ringMesh.castShadow = true;
+            ringMesh.castShadow = shadowsEnabled;
             coilRoot.add(ringMesh);
           }
           calRoot.add(coilRoot);
@@ -965,7 +974,7 @@
             const pageSheet = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.96, standHeight * 0.96), sheetMat);
             pageSheet.rotation.x = slantAngle;
             pageSheet.position.set(0, -standHeight / 2, halfBottom / 2);
-            pageSheet.castShadow = true;
+            pageSheet.castShadow = shadowsEnabled;
             pageHinge.add(pageSheet);
             pagesGroup.add(pageHinge);
           }
@@ -978,7 +987,7 @@
 
           const baseCover = new THREE.Mesh(new THREE.BoxGeometry(w, h, spine * 0.4), backMat);
           baseCover.position.x = w / 2;
-          baseCover.castShadow = true; baseCover.receiveShadow = true;
+          baseCover.castShadow = shadowsEnabled; baseCover.receiveShadow = shadowsEnabled;
           nbRoot.add(baseCover);
 
           const pagesGroup = new THREE.Group();
@@ -999,7 +1008,7 @@
 
             const sheet = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.005), sheetMat);
             sheet.position.set(w / 2, 0, 0);
-            sheet.castShadow = true;
+            sheet.castShadow = shadowsEnabled;
             pageHinge.add(sheet);
             pagesGroup.add(pageHinge);
           }
@@ -1010,7 +1019,7 @@
           const cardMatArr = [backMat, backMat, backMat, backMat, frontMat, backMat];
           const card = new THREE.Mesh(new THREE.BoxGeometry(w, h, spine), cardMatArr);
           card.position.y = h / 2;
-          card.castShadow = true; card.receiveShadow = true;
+          card.castShadow = shadowsEnabled; card.receiveShadow = shadowsEnabled;
           itemRoot.add(card);
         }
 
@@ -1225,8 +1234,9 @@
 
       const openVal = parseFloat(document.getElementById('openSlider').value);
 
-      // 動態光源投影
+      // 動態計算光影方位
       const lightDeg = parseFloat(document.getElementById('lightAngle')?.value || 45);
+      const intensity = parseFloat(document.getElementById('lightIntensity')?.value || 1.8);
       const rad = (lightDeg * Math.PI) / 180;
       const shadowDist = 20 + openVal * 15;
       const offsetX = Math.cos(rad) * shadowDist;
@@ -1236,10 +1246,14 @@
         ctx.save();
         ctx.translate(p.pos2D.x, p.pos2D.y);
 
-        ctx.shadowColor = 'rgba(0,0,0,0.45)';
-        ctx.shadowBlur = 30 + openVal * 15;
-        ctx.shadowOffsetX = offsetX;
-        ctx.shadowOffsetY = offsetY;
+        if (shadowsEnabled) {
+          ctx.shadowColor = `rgba(0,0,0,${Math.min(0.25 * intensity, 0.7)})`;
+          ctx.shadowBlur = 30 + openVal * 15;
+          ctx.shadowOffsetX = offsetX;
+          ctx.shadowOffsetY = offsetY;
+        } else {
+          ctx.shadowColor = 'transparent';
+        }
 
         // 黑膠唱片：2D 正圓裁剪，中心挖空
         if (p.type === 'vinyl' && openVal > 0) {
@@ -1617,12 +1631,16 @@
 
     function updateCustomBg(color) {
       groundMesh.material.color.set(color);
+      document.getElementById('mainStage').style.background = color;
       if (currentView === '2d') render2DCanvas();
     }
 
     function setBgPreset(mode) {
-      document.querySelectorAll('#step-3 .pill-btn').forEach(b => b.classList.remove('active'));
-      event?.target?.classList?.add('active');
+      document.querySelectorAll('#step-3 .pill-btn').forEach(b => {
+        if (b.id.startsWith('btn_bg_')) b.classList.remove('active');
+      });
+      const el = document.getElementById('btn_bg_' + mode);
+      if (el) el.classList.add('active');
 
       if (mode === 'pure_white') {
         updateCustomBg('#ffffff');
@@ -1644,12 +1662,26 @@
         groundMesh.material.color.set('#000000');
         groundMesh.material.map = null;
         groundMesh.material.needsUpdate = true;
+        document.getElementById('mainStage').style.background = 'transparent';
       }
+    }
+
+    function toggleShadows() {
+      shadowsEnabled = !shadowsEnabled;
+      const btn = document.getElementById('btn_no_shadow');
+      btn.classList.toggle('active', !shadowsEnabled);
+      btn.textContent = shadowsEnabled ? '無陰影模式 (切換)' : '✔ 無陰影模式 (已啟用)';
+      
+      keyLight.castShadow = shadowsEnabled;
+      groundMesh.visible = shadowsEnabled;
+      buildAll3DModels();
+      if (currentView === '2d') render2DCanvas();
     }
 
     function setPaper(type) {
       document.querySelectorAll('#step-1 .pill-btn').forEach(b => b.classList.remove('active'));
-      event?.target?.classList?.add('active');
+      const el = document.getElementById('btn_mat_' + type);
+      if (el) el.classList.add('active');
 
       const p = getSelectedProduct();
       if (type === 'coated') { p.metalness = 0.05; p.roughness = 0.35; }
@@ -1666,7 +1698,9 @@
 
     function updateLighting() {
       const ang = (parseFloat(document.getElementById('lightAngle').value) * Math.PI) / 180;
+      const intensity = parseFloat(document.getElementById('lightIntensity').value || 1.8);
       keyLight.position.set(Math.cos(ang) * 7, 7, Math.sin(ang) * 7);
+      keyLight.intensity = intensity;
       if (currentView === '2d') render2DCanvas();
     }
 
