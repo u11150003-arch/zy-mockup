@@ -2,30 +2,37 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>zy產品照打樣室</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>zy產品照打樣室 · Proofroom Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Montserrat:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
   <style>
     :root {
       --bg: #09090a;
-      --sidebar: #131314;
-      --card: #1b1b1c;
+      --panel: #131314;
+      --panel-2: #1b1b1c;
       --raised: #242425;
-      --border: #242426;
-      --border-light: #353537;
-      --text: #f1f0ec;
+      --ink: #f1f0ec;
+      --ink-2: #bcbbb5;
       --muted: #7c7b76;
+      --line: #242426;
+      --line-2: #353537;
       --accent: #e57373;
       --accent-active: #ef5350;
-      --btn-bg: #2a2b33;
+      --signal: #dd583a;
+      --mono: "IBM Plex Mono", ui-monospace, monospace;
+      --sans: "Montserrat", "Noto Sans TC", sans-serif;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang TC", "Microsoft JhengHei", sans-serif;
       background: var(--bg);
-      color: var(--text);
+      color: var(--ink);
+      font-family: var(--sans);
       display: flex;
       height: 100vh;
       overflow: hidden;
+      -webkit-font-smoothing: antialiased;
     }
 
     header {
@@ -40,9 +47,9 @@
       pointer-events: none;
     }
     .brand-title {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 700;
-      letter-spacing: 1px;
+      letter-spacing: 1.5px;
       color: #fff;
       display: flex;
       align-items: center;
@@ -56,27 +63,27 @@
       backdrop-filter: blur(10px);
       padding: 3px;
       border-radius: 999px;
-      border: 1px solid var(--border-light);
+      border: 1px solid var(--line-2);
       pointer-events: auto;
     }
     .top-tab {
       background: transparent;
       border: none;
-      color: var(--muted);
-      padding: 6px 18px;
+      color: var(--ink-2);
+      padding: 5px 18px;
       border-radius: 999px;
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 500;
       cursor: pointer;
       transition: all 0.2s;
     }
-    .top-tab.active { background: #fff; color: #111; }
+    .top-tab.active { background: #fff; color: #111; font-weight: 600; }
 
     aside {
       width: 380px;
       height: 100vh;
-      background: var(--sidebar);
-      border-right: 1px solid var(--border);
+      background: var(--panel);
+      border-right: 1px solid var(--line);
       display: flex;
       flex-direction: column;
       z-index: 20;
@@ -85,8 +92,8 @@
     .step-tabs {
       display: flex;
       overflow-x: auto;
-      border-bottom: 1px solid var(--border);
-      background: rgba(0,0,0,0.25);
+      border-bottom: 1px solid var(--line);
+      background: rgba(0,0,0,0.3);
     }
     .step-btn {
       flex: 1;
@@ -111,7 +118,7 @@
       gap: 16px;
     }
     .panel-scroll::-webkit-scrollbar { width: 4px; }
-    .panel-scroll::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 2px; }
+    .panel-scroll::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 2px; }
 
     .sec-h {
       font-size: 12px;
@@ -127,9 +134,9 @@
     .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 
     .pill-btn {
-      background: var(--card);
-      border: 1px solid var(--border-light);
-      color: var(--text);
+      background: var(--panel-2);
+      border: 1px solid var(--line-2);
+      color: var(--ink);
       padding: 8px 10px;
       border-radius: 6px;
       font-size: 12px;
@@ -137,10 +144,10 @@
       text-align: center;
       transition: all 0.15s;
     }
-    .pill-btn:hover { border-color: var(--muted); }
+    .pill-btn:hover { border-color: var(--ink-2); }
     .pill-btn.active {
       border-color: var(--accent);
-      background: rgba(229,115,115,0.12);
+      background: rgba(229,115,115,0.15);
       color: var(--accent);
       font-weight: 600;
     }
@@ -152,13 +159,13 @@
       font-size: 12px;
       margin-bottom: 8px;
     }
-    .form-row label { color: var(--muted); }
+    .form-row label { color: var(--ink-2); }
     .form-row input[type="number"], .form-row select, .form-row input[type="password"] {
-      background: var(--card);
-      border: 1px solid var(--border-light);
-      color: var(--text);
+      background: var(--panel-2);
+      border: 1px solid var(--line-2);
+      color: var(--ink);
       padding: 5px 8px;
-      border-radius: 5px;
+      border-radius: 999px;
       width: 95px;
       font-size: 12px;
       text-align: right;
@@ -168,27 +175,27 @@
       accent-color: var(--accent);
     }
     .form-row input[type="color"] {
-      border: 1px solid var(--border-light);
+      border: 1px solid var(--line-2);
       background: transparent;
       width: 40px; height: 26px;
-      border-radius: 4px;
+      border-radius: 999px;
       cursor: pointer;
     }
 
     .upload-box {
-      border: 1px dashed var(--border-light);
+      border: 1px dashed var(--line-2);
       padding: 10px 12px;
       border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       margin-bottom: 8px;
-      background: var(--card);
+      background: var(--panel-2);
     }
     .upload-box span { font-size: 12px; }
     .upload-box button {
-      background: var(--btn-bg);
-      border: 1px solid var(--border-light);
+      background: var(--raised);
+      border: 1px solid var(--line-2);
       color: #fff;
       padding: 4px 10px;
       border-radius: 4px;
@@ -201,15 +208,15 @@
       flex-wrap: wrap;
       gap: 6px;
       margin-bottom: 12px;
-      background: var(--card);
+      background: var(--panel-2);
       padding: 8px;
       border-radius: 8px;
-      border: 1px solid var(--border);
+      border: 1px solid var(--line);
     }
     .chip {
       padding: 4px 8px;
       border-radius: 4px;
-      background: #18191d;
+      background: var(--bg);
       font-size: 11px;
       display: flex;
       align-items: center;
@@ -223,7 +230,7 @@
     main {
       flex: 1;
       position: relative;
-      background: #09090a;
+      background: var(--bg);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -238,11 +245,10 @@
       display: none;
     }
 
-    /* 輸出裁切引導框 */
     #exportGuideBox {
       position: absolute;
       border: 2px dashed rgba(229, 115, 115, 0.9);
-      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.65);
       pointer-events: none;
       display: none;
       z-index: 25;
@@ -266,14 +272,14 @@
       align-items: center;
       gap: 16px;
       background: rgba(18, 18, 20, 0.92);
-      border: 1px solid var(--border-light);
+      border: 1px solid var(--line-2);
       padding: 8px 18px;
       border-radius: 999px;
       backdrop-filter: blur(12px);
       z-index: 30;
       font-size: 12px;
     }
-    .angle-btns { display: flex; gap: 6px; }
+    .angle-btns { display: flex; gap: 4px; }
     .angle-btn {
       background: transparent;
       border: none;
@@ -283,8 +289,8 @@
       font-size: 11px;
       cursor: pointer;
     }
-    .angle-btn:hover, .angle-btn.active { color: #fff; background: var(--card); }
-    .interact-row { display: flex; align-items: center; gap: 8px; border-left: 1px solid var(--border-light); padding-left: 16px; }
+    .angle-btn:hover, .angle-btn.active { color: #fff; background: var(--raised); }
+    .interact-row { display: flex; align-items: center; gap: 8px; border-left: 1px solid var(--line-2); padding-left: 14px; }
 
     .primary-btn {
       width: 100%;
@@ -315,7 +321,7 @@
 
   <header>
     <div class="brand-title">
-      zy產品照打樣室 <span>· 擬真打樣與材質模擬系統</span>
+      zy產品照打樣室 <span>· Proofroom 物理打樣管線</span>
     </div>
     <div class="top-center-tabs">
       <button class="top-tab active" onclick="setViewMode('3d')">3D 預覽</button>
@@ -335,7 +341,7 @@
     </div>
 
     <div class="panel-scroll" id="stepPanels">
-      <!-- 步驟 1: 品項與尺寸 + 專案管理 -->
+      <!-- 步驟 1: 品項與尺寸 + 專案管理 (密碼保護，無明文提示) -->
       <div id="step-0" class="step-content">
         <div class="project-auth-box">
           <div class="sec-h" style="margin-bottom:6px;">
@@ -413,9 +419,9 @@
         </div>
       </div>
 
-      <!-- 步驟 2: 材質工藝 (Proofroom 風格) -->
+      <!-- 步驟 2: 紙材與工藝 (Proofroom 微表面質感) -->
       <div id="step-1" class="step-content" style="display:none;">
-        <div class="sec-h">紙張材質紋理預設</div>
+        <div class="sec-h">材質紋理預設</div>
         <div class="grid-3" style="margin-bottom: 14px;">
           <button class="pill-btn active" id="btn_mat_coated" onclick="setPaper('coated')">銅版紙</button>
           <button class="pill-btn" id="btn_mat_matte" onclick="setPaper('matte')">雪銅紙</button>
@@ -443,7 +449,7 @@
         <p style="font-size: 11px; color: var(--muted); margin-top: 8px;">* 支援高解析 PNG/JPG。各部件獨立指定，3D/2D 即時映射。</p>
       </div>
 
-      <!-- 步驟 4: 光線場景 (Proofroom 專業光照與真實桌面) -->
+      <!-- 步驟 4: 光線與場景 (Proofroom 專業商攝光照) -->
       <div id="step-3" class="step-content" style="display:none;">
         <div class="sec-h">攝影棚燈光氛圍</div>
         <div class="form-row">
@@ -463,21 +469,18 @@
           <input type="range" id="lightIntensity" min="0.2" max="3.5" step="0.1" value="1.8" oninput="updateLighting()">
         </div>
 
-        <div class="sec-h" style="margin-top: 14px;">背景真實材質質感</div>
+        <div class="sec-h" style="margin-top: 14px;">背景與展台底色</div>
         <div class="grid-2">
-          <button class="pill-btn active" id="btn_bg_studio" onclick="setBgPreset('studio')">攝影棚深灰 (磨砂)</button>
-          <button class="pill-btn" id="btn_bg_linen" onclick="setBgPreset('linen')">棉麻布紋 (編織織理)</button>
-          <button class="pill-btn" id="btn_bg_marble" onclick="setBgPreset('marble')">天然大理石 / 水磨石</button>
-          <button class="pill-btn" id="btn_bg_wood" onclick="setBgPreset('wood')">溫潤原木紋理</button>
-          <button class="pill-btn" id="btn_bg_pure_white" onclick="setBgPreset('pure_white')">無縫純白背景</button>
-          <button class="pill-btn" id="btn_bg_transparent" onclick="setBgPreset('transparent')">透明底 (PNG 陰影)</button>
+          <button class="pill-btn active" id="btn_bg_studio" onclick="setBgPreset('studio')">沉浸深灰 (Studio)</button>
+          <button class="pill-btn" id="btn_bg_pure_white" onclick="setBgPreset('pure_white')">無縫純白 (電商)</button>
+          <button class="pill-btn" id="btn_bg_transparent" onclick="setBgPreset('transparent')">透明背景 (PNG 陰影)</button>
+          <button class="pill-btn" id="btn_no_shadow" onclick="toggleShadows()">無陰影模式 (切換)</button>
         </div>
 
         <div class="form-row" style="margin-top:10px;">
-          <label>自訂底色微調</label>
-          <input type="color" id="customBgColor" value="#14151a" oninput="updateCustomBg(this.value)">
+          <label>自訂展台底色</label>
+          <input type="color" id="customBgColor" value="#0f0f10" oninput="updateCustomBg(this.value)">
         </div>
-        <button class="pill-btn" id="btn_no_shadow" style="width:100%; margin-top:4px;" onclick="toggleShadows()">無陰影模式 (切換)</button>
       </div>
 
       <!-- 步驟 5: 輸出圖片 (1:1 中心精準對齊裁切) -->
@@ -495,11 +498,11 @@
         <div class="form-row">
           <label>匯出格式</label>
           <select id="exportFormat">
-            <option value="png">PNG (透明/純淨/保留陰影)</option>
+            <option value="png">PNG (透明/保留陰影)</option>
             <option value="jpeg">高品質 JPG</option>
           </select>
         </div>
-        <p style="font-size: 11px; color: var(--muted); margin: 6px 0 12px;">* 虛線框標記了目前輸出畫面範圍，已自動居中產品。可拖曳視角縮放微調。</p>
+        <p style="font-size: 11px; color: var(--muted); margin: 6px 0 12px;">* 虛線框標記了目前輸出畫面範圍，已自動居中產品。可用手掌工具調整取景。</p>
         <button class="primary-btn" onclick="executeExport()">立即下載打樣成品圖</button>
       </div>
 
@@ -519,6 +522,7 @@
 
     <div class="bottom-bar" id="bottomBar">
       <div class="angle-btns">
+        <button class="angle-btn" id="btnPan" onclick="togglePanMode()">✋ 平移畫面</button>
         <button class="angle-btn" onclick="setCameraAngle('top')">俯視</button>
         <button class="angle-btn active" onclick="setCameraAngle('iso')">斜 45°</button>
         <button class="angle-btn" onclick="setCameraAngle('flat')">平放地面</button>
@@ -534,60 +538,7 @@
   </main>
 
   <script>
-    // --- 高解析真實材質產生器 ---
-    const bgTextures = {};
-
-    function generateRealisticTextures() {
-      // 1. 攝影棚磨砂深灰
-      const c1 = document.createElement('canvas'); c1.width = c1.height = 1024;
-      const x1 = c1.getContext('2d');
-      x1.fillStyle = '#16171d'; x1.fillRect(0, 0, 1024, 1024);
-      const id1 = x1.getImageData(0, 0, 1024, 1024);
-      for (let i = 0; i < id1.data.length; i += 4) {
-        const n = (Math.random() - 0.5) * 22;
-        id1.data[i] += n; id1.data[i+1] += n; id1.data[i+2] += n;
-      }
-      x1.putImageData(id1, 0, 0);
-      bgTextures['studio'] = c1;
-
-      // 2. 棉麻布紋
-      const c2 = document.createElement('canvas'); c2.width = c2.height = 1024;
-      const x2 = c2.getContext('2d');
-      x2.fillStyle = '#2c2a27'; x2.fillRect(0, 0, 1024, 1024);
-      x2.strokeStyle = 'rgba(255,255,255,0.06)';
-      x2.lineWidth = 1.5;
-      for (let i = 0; i < 1024; i += 6) {
-        x2.beginPath(); x2.moveTo(i, 0); x2.lineTo(i, 1024); x2.stroke();
-        x2.beginPath(); x2.moveTo(0, i); x2.lineTo(1024, i); x2.stroke();
-      }
-      bgTextures['linen'] = c2;
-
-      // 3. 水磨石 / 大理石紋
-      const c3 = document.createElement('canvas'); c3.width = c3.height = 1024;
-      const x3 = c3.getContext('2d');
-      x3.fillStyle = '#e8eaed'; x3.fillRect(0, 0, 1024, 1024);
-      const spots = ['#202124', '#5f6368', '#bdc1c6', '#d2e3fc', '#f28b82'];
-      for (let i = 0; i < 300; i++) {
-        x3.fillStyle = spots[Math.floor(Math.random() * spots.length)];
-        x3.beginPath();
-        x3.arc(Math.random() * 1024, Math.random() * 1024, Math.random() * 8 + 2, 0, Math.PI * 2);
-        x3.fill();
-      }
-      bgTextures['marble'] = c3;
-
-      // 4. 原木紋理
-      const c4 = document.createElement('canvas'); c4.width = c4.height = 1024;
-      const x4 = c4.getContext('2d');
-      x4.fillStyle = '#4a3525'; x4.fillRect(0, 0, 1024, 1024);
-      x4.strokeStyle = 'rgba(0,0,0,0.12)';
-      for (let i = 0; i < 1024; i += 12) {
-        x4.lineWidth = Math.random() * 5 + 1;
-        x4.beginPath(); x4.moveTo(0, i); x4.bezierCurveTo(300, i + 10, 700, i - 10, 1024, i); x4.stroke();
-      }
-      bgTextures['wood'] = c4;
-    }
-    generateRealisticTextures();
-
+    // --- 預設貼圖生成 (黑膠同心紋、白底圓標、CD鏡面鋁光) ---
     function makeArt(text, sub, bg = '#161c28') {
       const c = document.createElement('canvas');
       c.width = 1024; c.height = 1024;
@@ -610,19 +561,21 @@
       return tex;
     }
 
-    // 黑膠唱片：嚴格對齊 (512, 512)，中心孔洞與圓形標籤完美置中
+    // Proofroom 級黑膠盤面紋理 (圓心嚴格置於 512, 512)
     function makeVinylTexture() {
       const c = document.createElement('canvas');
       c.width = 1024; c.height = 1024;
       const ctx = c.getContext('2d');
-      ctx.fillStyle = '#0a0a0c';
+      ctx.fillStyle = '#0c0d10';
       ctx.fillRect(0, 0, 1024, 1024);
 
+      // 黑膠溝槽
       for (let r = 210; r < 500; r += 2) {
-        ctx.strokeStyle = `rgba(255,255,255,${0.03 + (r % 6 === 0 ? 0.05 : 0)})`;
+        ctx.strokeStyle = `rgba(255,255,255,${0.025 + (r % 6 === 0 ? 0.04 : 0)})`;
         ctx.lineWidth = 1;
         ctx.beginPath(); ctx.arc(512, 512, r, 0, Math.PI * 2); ctx.stroke();
       }
+      // 中心圓標籤
       ctx.fillStyle = '#f4f1ea';
       ctx.beginPath(); ctx.arc(512, 512, 175, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = '#111';
@@ -636,7 +589,7 @@
       return tex;
     }
 
-    // CD 光碟：真實銀白金屬反光材質
+    // CD 鏡面鋁光紋理
     function makeCDTexture() {
       const c = document.createElement('canvas');
       c.width = 1024; c.height = 1024;
@@ -668,6 +621,7 @@
     let isFlatMode = false;
     let shadowsEnabled = true;
     let currentBgMode = 'studio';
+    let isPanActive = false;
 
     let products = [
       {
@@ -676,7 +630,7 @@
         w: 314, h: 314, spine: 6, radius: 0, pages: 1,
         metalness: 0.05, roughness: 0.65,
         pos3D: { x: 0, y: 0, z: 0 },
-        pos2D: { x: 300, y: 250 },
+        pos2D: { x: 260, y: 220 },
         textures: {
           front: makeArt('MIDNIGHT ROUTE', 'LUNA HARBOR', '#161c28'),
           back: makeArt('TRACKLIST', '1. Harbor Lights\n2. Low Tide', '#1e2430'),
@@ -700,7 +654,7 @@
       products.forEach(p => p.pos3D.x -= centerX);
     }
 
-    // --- 3D 核心 (Three.js) ---
+    // --- 3D 渲染系統 (Proofroom 物理引擎) ---
     let scene, camera, renderer, controls, studioRoot, groundMesh;
     let keyLight, fillLight, rimLight;
     let is3DDragging = false, drag3DItem = null;
@@ -719,7 +673,7 @@
       renderer.setSize(container.clientWidth, container.clientHeight);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.shadowMap.enabled = true;
-      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Proofroom 柔和陰影
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.0;
       container.appendChild(renderer.domElement);
@@ -730,12 +684,13 @@
       controls.screenSpacePanning = true;
       controls.maxPolarAngle = Math.PI / 2 + 0.02;
 
+      // Proofroom 三點照明
       keyLight = new THREE.DirectionalLight(0xfff7ea, 2.0);
       keyLight.position.set(5, 8, 5);
       keyLight.castShadow = true;
       keyLight.shadow.mapSize.set(2048, 2048);
       keyLight.shadow.bias = -0.0001;
-      keyLight.shadow.radius = 3;
+      keyLight.shadow.radius = 3.5;
       scene.add(keyLight);
 
       fillLight = new THREE.DirectionalLight(0xdbe6ff, 0.8);
@@ -746,17 +701,11 @@
       rimLight.position.set(0, 6, -6);
       scene.add(rimLight);
 
-      scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+      scene.add(new THREE.AmbientLight(0xffffff, 0.45));
 
+      // 地板：陰影接收材質
       const gGeo = new THREE.PlaneGeometry(80, 80);
-      const tex = new THREE.CanvasTexture(bgTextures['studio']);
-      tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(8, 8);
-      const gMat = new THREE.MeshStandardMaterial({
-        color: 0xffffff,
-        roughness: 0.9,
-        metalness: 0.1,
-        map: tex
-      });
+      const gMat = new THREE.ShadowMaterial({ opacity: 0.45 });
       groundMesh = new THREE.Mesh(gGeo, gMat);
       groundMesh.rotation.x = -Math.PI / 2;
       groundMesh.position.y = 0;
@@ -769,7 +718,7 @@
       // 3D 物品點選與直接拖曳平移
       const dom = renderer.domElement;
       dom.addEventListener('mousedown', (e) => {
-        if (e.button !== 0 || currentView !== '3d') return;
+        if (e.button !== 0 || currentView !== '3d' || isPanActive) return;
         const rect = dom.getBoundingClientRect();
         mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
         mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
@@ -826,6 +775,15 @@
       renderLoop();
     }
 
+    function togglePanMode() {
+      isPanActive = !isPanActive;
+      const btn = document.getElementById('btnPan');
+      btn.classList.toggle('active', isPanActive);
+      controls.mouseButtons = isPanActive
+        ? { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE }
+        : { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
+    }
+
     function buildAll3DModels() {
       while(studioRoot.children.length > 0) studioRoot.remove(studioRoot.children[0]);
 
@@ -843,7 +801,7 @@
         const insideMat = new THREE.MeshStandardMaterial({ map: p.textures.inside || p.textures.front, metalness: p.metalness, roughness: p.roughness });
 
         if (p.type === 'vinyl') {
-          // Proofroom 擬真黑膠唱片封套
+          // Proofroom 黑膠外套結構
           const jacket = new THREE.Mesh(new THREE.BoxGeometry(w, h, spine), [backMat, backMat, backMat, backMat, frontMat, backMat]);
           jacket.position.y = h / 2;
           jacket.castShadow = shadowsEnabled; jacket.receiveShadow = shadowsEnabled;
@@ -870,7 +828,7 @@
           jacket.add(disc);
         }
         else if (p.type === 'cd_jewel') {
-          // CD 寶麗盒：透明硬質壓克力 + 內部托盤 + CD 嵌合
+          // CD 寶麗盒：透明硬盒外殼，未開啟時正面遮蓋
           const baseGroup = new THREE.Group();
           baseGroup.position.y = h / 2;
           const acrylMat = new THREE.MeshPhysicalMaterial({ transmission: 0.92, opacity: 1, transparent: true, roughness: 0.05, ior: 1.5, thickness: 0.08 });
@@ -915,7 +873,7 @@
           itemRoot.add(baseGroup);
         }
         else if (p.type === 'cd_digipak') {
-          // CD Digipak：紙質封面對折開合
+          // CD Digipak：封面折疊向左掀開，光碟在右內頁
           const digiGroup = new THREE.Group();
           digiGroup.position.y = h / 2;
 
@@ -1118,7 +1076,9 @@
     }
 
     function setCameraAngle(angle) {
-      document.querySelectorAll('.angle-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.angle-btn').forEach(b => {
+        if (b.id !== 'btnPan') b.classList.remove('active');
+      });
       event?.target?.classList?.add('active');
 
       const curr = getSelectedProduct();
@@ -1251,14 +1211,9 @@
       const H = customH || cvs.clientHeight;
       if (!targetCtx) { cvs.width = W; cvs.height = H; }
 
-      // 繪製背景
       if (!isTransparentExport) {
         if (currentBgMode === 'pure_white') {
           ctx.fillStyle = '#ffffff';
-          ctx.fillRect(0, 0, W, H);
-        } else if (bgTextures[currentBgMode]) {
-          const pat = ctx.createPattern(bgTextures[currentBgMode], 'repeat');
-          ctx.fillStyle = pat;
           ctx.fillRect(0, 0, W, H);
         } else {
           ctx.fillStyle = document.getElementById('customBgColor').value;
@@ -1271,7 +1226,6 @@
       ctx.save();
       const vt = viewTransform.plan2d;
 
-      // 若指定了輸出居中偏移
       if (originShift) {
         ctx.translate(originShift.x, originShift.y);
         ctx.scale(originShift.scale, originShift.scale);
@@ -1577,7 +1531,7 @@
           { key: 'front', label: 'Digipak 外折封面' },
           { key: 'back', label: 'Digipak 內折底頁' },
           { key: 'inside', label: '托盤襯底插圖' },
-          { key: 'disc', label: 'CD 光碟盤面 (中心自動開孔)' }
+          { key: 'disc', label: 'CD 實體光碟盤面 (中心自動開孔)' }
         ];
       } else if (p.type === 'calendar_desk' || p.type === 'notebook') {
         const total = p.pages || 5;
@@ -1708,8 +1662,8 @@
     }
 
     function updateCustomBg(color) {
-      groundMesh.material.color.set(color);
       document.getElementById('mainStage').style.background = color;
+      renderer.setClearColor(color, 1);
       if (currentView === '2d') render2DCanvas();
     }
 
@@ -1722,31 +1676,17 @@
       if (el) el.classList.add('active');
 
       if (mode === 'pure_white') {
-        groundMesh.material.color.set(0xffffff);
-        groundMesh.material.map = null;
-        groundMesh.material.transparent = false;
-        groundMesh.material.opacity = 1;
-        groundMesh.material.needsUpdate = true;
         renderer.setClearColor(0xffffff, 1);
         document.getElementById('mainStage').style.background = '#ffffff';
+        groundMesh.visible = shadowsEnabled;
       } else if (mode === 'transparent') {
         renderer.setClearColor(0x000000, 0);
-        groundMesh.material.color.set(0x000000);
-        groundMesh.material.map = null;
-        groundMesh.material.transparent = true;
-        groundMesh.material.opacity = 0; // 完全透明但承接陰影
-        groundMesh.material.needsUpdate = true;
         document.getElementById('mainStage').style.background = 'transparent';
+        groundMesh.visible = shadowsEnabled;
       } else {
-        const tex = new THREE.CanvasTexture(bgTextures[mode]);
-        tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(8, 8);
-        groundMesh.material.color.set(0xffffff);
-        groundMesh.material.map = tex;
-        groundMesh.material.transparent = false;
-        groundMesh.material.opacity = 1;
-        groundMesh.material.needsUpdate = true;
-        renderer.setClearColor(mode === 'linen' ? 0x252422 : 0x14151a, 1);
-        document.getElementById('mainStage').style.background = mode === 'linen' ? '#252422' : '#14151a';
+        renderer.setClearColor(0x0f0f10, 1);
+        document.getElementById('mainStage').style.background = '#0f0f10';
+        groundMesh.visible = shadowsEnabled;
       }
       if (currentView === '2d') render2DCanvas();
     }
@@ -1784,7 +1724,7 @@
       btn.textContent = shadowsEnabled ? '無陰影模式 (切換)' : '✔ 無陰影模式 (已啟用)';
       
       keyLight.castShadow = shadowsEnabled;
-      groundMesh.visible = shadowsEnabled;
+      groundMesh.visible = shadowsEnabled && currentBgMode !== 'transparent';
       buildAll3DModels();
       if (currentView === '2d') render2DCanvas();
     }
@@ -1815,7 +1755,7 @@
       if (currentView === '2d') render2DCanvas();
     }
 
-    // --- 高解析 1:1 居中規格化輸出 (徹底解決偏移與背景透明問題) ---
+    // --- 高解析 1:1 精確居中與真實透明 PNG 輸出 ---
     function executeExport() {
       const ratio = parseFloat(document.getElementById('exportRatio').value);
       const format = document.getElementById('exportFormat').value;
@@ -1829,34 +1769,34 @@
       link.download = `zy-打樣成品-${Date.now()}.${isPng ? 'png' : 'jpg'}`;
 
       if (currentView === '3d') {
-        // 計算 3D 物品包圍盒，確保居中
-        const box = new THREE.Box3().setFromObject(studioRoot);
-        const center = new THREE.Vector3();
-        box.getCenter(center);
-        const size = new THREE.Vector3();
-        box.getSize(size);
+        const guideBox = document.getElementById('exportGuideBox');
+        const stage = document.getElementById('mainStage');
+        const rect = guideBox.getBoundingClientRect();
+        const stageRect = stage.getBoundingClientRect();
 
-        // 備份相機狀態
+        // 備份
         const origAspect = camera.aspect;
+        const origFov = camera.fov;
         const origPos = camera.position.clone();
         const origTarget = controls.target.clone();
 
-        camera.aspect = ratio;
+        // 計算裁切框在當前畫面中的範圍比例
+        const cropX = (rect.left - stageRect.left) / stageRect.width;
+        const cropY = (rect.top - stageRect.top) / stageRect.height;
+        const cropW = rect.width / stageRect.width;
+        const cropH = rect.height / stageRect.height;
+
+        // 設定相機對齊裁切框中心
+        camera.setViewOffset(
+          stageRect.width, stageRect.height,
+          rect.left - stageRect.left, rect.top - stageRect.top,
+          rect.width, rect.height
+        );
         camera.updateProjectionMatrix();
 
-        // 調整相機對齊中心
-        const maxDim = Math.max(size.x, size.y, size.z);
-        const fov = camera.fov * (Math.PI / 180);
-        let cameraDist = Math.abs(maxDim / Math.sin(fov / 2)) * 0.9;
-        
-        const dir = new THREE.Vector3().subVectors(origPos, origTarget).normalize();
-        camera.position.copy(center).add(dir.multiplyScalar(cameraDist));
-        camera.lookAt(center);
-
         renderer.setSize(outW, outH);
-        
-        // 若為透明，暫時完全隱藏地板
-        const groundPrevVisible = groundMesh.visible;
+
+        // 若為透明，隱藏實體地面以保留乾淨透明 Alpha 通道
         if (isTransparent) {
           groundMesh.visible = false;
           renderer.setClearColor(0x000000, 0);
@@ -1866,18 +1806,20 @@
         link.href = renderer.domElement.toDataURL(isPng ? 'image/png' : 'image/jpeg', 0.95);
 
         // 還原
-        if (isTransparent) groundMesh.visible = groundPrevVisible;
-        const container = document.getElementById('viewport3d');
-        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.clearViewOffset();
+        camera.aspect = origAspect;
+        camera.fov = origFov;
         camera.position.copy(origPos);
         camera.lookAt(origTarget);
         camera.updateProjectionMatrix();
-        renderer.setSize(container.clientWidth, container.clientHeight);
-        renderer.setClearColor(currentBgMode === 'transparent' ? 0x000000 : (currentBgMode === 'pure_white' ? 0xffffff : 0x14151a), currentBgMode === 'transparent' ? 0 : 1);
+
+        renderer.setSize(stageRect.width, stageRect.height);
+        groundMesh.visible = shadowsEnabled && currentBgMode !== 'transparent';
+        renderer.setClearColor(currentBgMode === 'transparent' ? 0x000000 : (currentBgMode === 'pure_white' ? 0xffffff : 0x0f0f10), currentBgMode === 'transparent' ? 0 : 1);
       } else if (currentView === 'die') {
         link.href = document.getElementById('canvasDie').toDataURL(isPng ? 'image/png' : 'image/jpeg', 0.95);
       } else {
-        // 2D 模式精準計算整體商品重心，縮放並置中至 1:1 或指定比例畫布中央
+        // 2D 模式精準置中
         let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
         products.forEach(p => {
           minX = Math.min(minX, p.pos2D.x);
