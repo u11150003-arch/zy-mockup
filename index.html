@@ -6,12 +6,14 @@
   <title>zy產品照打樣室</title>
   <style>
     :root {
-      --bg: #111215;
-      --sidebar: #18191d;
-      --card: #222329;
-      --border: #2c2d35;
-      --text: #eaebee;
-      --muted: #8b8d99;
+      --bg: #09090a;
+      --sidebar: #131314;
+      --card: #1b1b1c;
+      --raised: #242425;
+      --border: #242426;
+      --border-light: #353537;
+      --text: #f1f0ec;
+      --muted: #7c7b76;
       --accent: #e57373;
       --accent-active: #ef5350;
       --btn-bg: #2a2b33;
@@ -50,11 +52,11 @@
     .brand-title span { font-size: 11px; font-weight: normal; color: var(--muted); }
     .top-center-tabs {
       display: flex;
-      background: rgba(30,31,38,0.9);
-      backdrop-filter: blur(8px);
+      background: rgba(19, 19, 20, 0.85);
+      backdrop-filter: blur(10px);
       padding: 3px;
-      border-radius: 20px;
-      border: 1px solid var(--border);
+      border-radius: 999px;
+      border: 1px solid var(--border-light);
       pointer-events: auto;
     }
     .top-tab {
@@ -62,7 +64,7 @@
       border: none;
       color: var(--muted);
       padding: 6px 18px;
-      border-radius: 16px;
+      border-radius: 999px;
       font-size: 12px;
       font-weight: 600;
       cursor: pointer;
@@ -84,7 +86,7 @@
       display: flex;
       overflow-x: auto;
       border-bottom: 1px solid var(--border);
-      background: rgba(0,0,0,0.15);
+      background: rgba(0,0,0,0.25);
     }
     .step-btn {
       flex: 1;
@@ -109,7 +111,7 @@
       gap: 16px;
     }
     .panel-scroll::-webkit-scrollbar { width: 4px; }
-    .panel-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .panel-scroll::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 2px; }
 
     .sec-h {
       font-size: 12px;
@@ -126,7 +128,7 @@
 
     .pill-btn {
       background: var(--card);
-      border: 1px solid var(--border);
+      border: 1px solid var(--border-light);
       color: var(--text);
       padding: 8px 10px;
       border-radius: 6px;
@@ -153,7 +155,7 @@
     .form-row label { color: var(--muted); }
     .form-row input[type="number"], .form-row select, .form-row input[type="password"] {
       background: var(--card);
-      border: 1px solid var(--border);
+      border: 1px solid var(--border-light);
       color: var(--text);
       padding: 5px 8px;
       border-radius: 5px;
@@ -166,7 +168,7 @@
       accent-color: var(--accent);
     }
     .form-row input[type="color"] {
-      border: 1px solid var(--border);
+      border: 1px solid var(--border-light);
       background: transparent;
       width: 40px; height: 26px;
       border-radius: 4px;
@@ -174,7 +176,7 @@
     }
 
     .upload-box {
-      border: 1px dashed var(--border);
+      border: 1px dashed var(--border-light);
       padding: 10px 12px;
       border-radius: 8px;
       display: flex;
@@ -186,7 +188,7 @@
     .upload-box span { font-size: 12px; }
     .upload-box button {
       background: var(--btn-bg);
-      border: 1px solid var(--border);
+      border: 1px solid var(--border-light);
       color: #fff;
       padding: 4px 10px;
       border-radius: 4px;
@@ -221,7 +223,7 @@
     main {
       flex: 1;
       position: relative;
-      background: #0d0e12;
+      background: #0f0f10;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -263,11 +265,11 @@
       display: flex;
       align-items: center;
       gap: 16px;
-      background: rgba(24,25,29,0.92);
-      border: 1px solid var(--border);
+      background: rgba(18, 18, 20, 0.92);
+      border: 1px solid var(--border-light);
       padding: 8px 18px;
-      border-radius: 30px;
-      backdrop-filter: blur(10px);
+      border-radius: 999px;
+      backdrop-filter: blur(12px);
       z-index: 30;
       font-size: 12px;
     }
@@ -277,12 +279,12 @@
       border: none;
       color: var(--muted);
       padding: 4px 10px;
-      border-radius: 12px;
+      border-radius: 999px;
       font-size: 11px;
       cursor: pointer;
     }
     .angle-btn:hover, .angle-btn.active { color: #fff; background: var(--card); }
-    .interact-row { display: flex; align-items: center; gap: 8px; border-left: 1px solid var(--border); padding-left: 16px; }
+    .interact-row { display: flex; align-items: center; gap: 8px; border-left: 1px solid var(--border-light); padding-left: 16px; }
 
     .primary-btn {
       width: 100%;
@@ -333,7 +335,7 @@
     </div>
 
     <div class="panel-scroll" id="stepPanels">
-      <!-- 步驟 1: 品項與尺寸 + 專案管理 -->
+      <!-- 步驟 1: 品項與尺寸 + 專案管理 (密碼 0411，無提示) -->
       <div id="step-0" class="step-content">
         <div class="project-auth-box">
           <div class="sec-h" style="margin-bottom:6px;">
@@ -445,11 +447,11 @@
       <div id="step-3" class="step-content" style="display:none;">
         <div class="sec-h">攝影棚燈光氛圍</div>
         <div class="form-row">
-          <label>燈光預設風格</label>
+          <label>燈光風格預設</label>
           <select id="lightPreset" onchange="applyLightPreset(this.value)">
-            <option value="studio">商業柔光 (三點均勻柔和)</option>
-            <option value="rim">輪廓側光 (高對比金屬邊緣線)</option>
-            <option value="dramatic">戲劇頂光 (聚焦強烈直射投影)</option>
+            <option value="studio">商業柔光 (三點均勻攝影棚)</option>
+            <option value="rim">輪廓側光 (高對比反光邊緣線)</option>
+            <option value="dramatic">戲劇高反差 (頂光強烈聚焦投影)</option>
           </select>
         </div>
         <div class="form-row">
@@ -608,12 +610,14 @@
       return tex;
     }
 
+    // 黑膠唱片貼圖：中心孔洞與圓形標籤完美置中 (512, 512)
     function makeVinylTexture() {
       const c = document.createElement('canvas');
       c.width = 1024; c.height = 1024;
       const ctx = c.getContext('2d');
       ctx.fillStyle = '#0a0a0c';
       ctx.fillRect(0, 0, 1024, 1024);
+
       for (let r = 210; r < 500; r += 2) {
         ctx.strokeStyle = `rgba(255,255,255,${0.03 + (r % 6 === 0 ? 0.05 : 0)})`;
         ctx.lineWidth = 1;
@@ -632,18 +636,21 @@
       return tex;
     }
 
+    // CD 光碟：真實銀白金屬反光材質
     function makeCDTexture() {
       const c = document.createElement('canvas');
       c.width = 1024; c.height = 1024;
       const ctx = c.getContext('2d');
       ctx.fillStyle = '#d8dee6';
       ctx.fillRect(0, 0, 1024, 1024);
+
       const grad = ctx.createRadialGradient(512, 512, 100, 512, 512, 512);
       grad.addColorStop(0, '#f8fafc');
       grad.addColorStop(0.5, '#c0c7d0');
       grad.addColorStop(1, '#e2e8f0');
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, 1024, 1024);
+
       ctx.fillStyle = '#1c2438';
       ctx.beginPath();
       ctx.arc(512, 512, 490, Math.PI, Math.PI * 2);
@@ -956,7 +963,8 @@
 
           const standGeo = new THREE.ExtrudeGeometry(standShape, { depth: w, bevelEnabled: false });
           standGeo.center();
-          const standMesh = new THREE.Mesh(standGeo, new THREE.MeshStandardMaterial({ color: 0xf2ede4, roughness: 0.8 }));
+          const standMat = new THREE.MeshStandardMaterial({ color: 0xf2ede4, roughness: 0.8 });
+          const standMesh = new THREE.Mesh(standGeo, standMat);
           standMesh.rotation.y = Math.PI / 2;
           standMesh.position.y = standHeight / 2;
           standMesh.castShadow = shadowsEnabled; standMesh.receiveShadow = shadowsEnabled;
@@ -1411,7 +1419,7 @@
       document.getElementById('exportGuideTag').textContent = tagMap[document.getElementById('exportRatio').value] || '輸出範圍';
     }
 
-    // --- 專案保存區 (密碼 0411) ---
+    // --- 專案保存區 (密碼 0411，無提示) ---
     function unlockProjectManager() {
       const pwd = document.getElementById('projPwd').value;
       if (pwd === '0411') {
@@ -1558,8 +1566,8 @@
         parts = [
           { key: 'front', label: 'Digipak 外折封面' },
           { key: 'back', label: 'Digipak 內折底頁' },
-          { key: 'inside', label: '托盤襯底插圖' },
-          { key: 'disc', label: 'CD 實體光碟盤面 (中心自動開孔)' }
+          { key: 'inside', label: '右托盤內襯圖稿' },
+          { key: 'disc', label: 'CD 光碟盤面 (中心自動開孔)' }
         ];
       } else if (p.type === 'calendar_desk' || p.type === 'notebook') {
         const total = p.pages || 5;
@@ -1704,14 +1712,14 @@
       if (el) el.classList.add('active');
 
       if (mode === 'pure_white') {
-        groundMesh.material.color.set(0xffffff);
+        updateCustomBg('#ffffff');
         groundMesh.material.map = null;
         groundMesh.material.needsUpdate = true;
         renderer.setClearColor(0xffffff, 1);
         document.getElementById('mainStage').style.background = '#ffffff';
       } else if (mode === 'transparent') {
         renderer.setClearColor(0x000000, 0);
-        groundMesh.material.color.set(0x000000);
+        groundMesh.material.color.set('#000000');
         groundMesh.material.map = null;
         groundMesh.material.needsUpdate = true;
         document.getElementById('mainStage').style.background = 'transparent';
@@ -1791,14 +1799,12 @@
       if (currentView === '2d') render2DCanvas();
     }
 
-    // --- 高解析規格化輸出 (支援精確比例、中心對齊與純淨透明) ---
     function executeExport() {
       const ratio = parseFloat(document.getElementById('exportRatio').value);
       const format = document.getElementById('exportFormat').value;
       const isPng = format === 'png';
       const isTransparent = isPng && currentBgMode === 'transparent';
 
-      // 設定標準解析度
       let outW = 2048;
       let outH = Math.round(outW / ratio);
 
@@ -1823,7 +1829,6 @@
 
         link.href = renderer.domElement.toDataURL(isPng ? 'image/png' : 'image/jpeg', 0.95);
 
-        // 還原原始畫面
         const container = document.getElementById('viewport3d');
         camera.aspect = container.clientWidth / container.clientHeight;
         camera.updateProjectionMatrix();
@@ -1832,7 +1837,6 @@
       } else if (currentView === 'die') {
         link.href = document.getElementById('canvasDie').toDataURL(isPng ? 'image/png' : 'image/jpeg', 0.95);
       } else {
-        // 2D 模式精準裁剪渲染
         render2DCanvas(offCtx, outW, outH, isTransparent);
         link.href = offCanvas.toDataURL(isPng ? 'image/png' : 'image/jpeg', 0.95);
       }
