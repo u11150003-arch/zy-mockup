@@ -223,7 +223,7 @@
     main {
       flex: 1;
       position: relative;
-      background: #0f0f10;
+      background: #09090a;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -238,11 +238,11 @@
       display: none;
     }
 
-    /* 輸出裁切互動引導框 */
+    /* 輸出裁切引導框 */
     #exportGuideBox {
       position: absolute;
-      border: 2px dashed var(--accent);
-      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
+      border: 2px dashed rgba(229, 115, 115, 0.9);
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6);
       pointer-events: none;
       display: none;
       z-index: 25;
@@ -335,7 +335,7 @@
     </div>
 
     <div class="panel-scroll" id="stepPanels">
-      <!-- 步驟 1: 品項與尺寸 + 專案管理 (密碼 0411，無提示) -->
+      <!-- 步驟 1: 品項與尺寸 + 專案管理 -->
       <div id="step-0" class="step-content">
         <div class="project-auth-box">
           <div class="sec-h" style="margin-bottom:6px;">
@@ -413,9 +413,9 @@
         </div>
       </div>
 
-      <!-- 步驟 2: 材質工藝 -->
+      <!-- 步驟 2: 材質工藝 (Proofroom 風格) -->
       <div id="step-1" class="step-content" style="display:none;">
-        <div class="sec-h">材質紋理預設</div>
+        <div class="sec-h">紙張材質紋理預設</div>
         <div class="grid-3" style="margin-bottom: 14px;">
           <button class="pill-btn active" id="btn_mat_coated" onclick="setPaper('coated')">銅版紙</button>
           <button class="pill-btn" id="btn_mat_matte" onclick="setPaper('matte')">雪銅紙</button>
@@ -443,7 +443,7 @@
         <p style="font-size: 11px; color: var(--muted); margin-top: 8px;">* 支援高解析 PNG/JPG。各部件獨立指定，3D/2D 即時映射。</p>
       </div>
 
-      <!-- 步驟 4: 光線場景 -->
+      <!-- 步驟 4: 光線場景 (Proofroom 專業光照與真實桌面) -->
       <div id="step-3" class="step-content" style="display:none;">
         <div class="sec-h">攝影棚燈光氛圍</div>
         <div class="form-row">
@@ -480,7 +480,7 @@
         <button class="pill-btn" id="btn_no_shadow" style="width:100%; margin-top:4px;" onclick="toggleShadows()">無陰影模式 (切換)</button>
       </div>
 
-      <!-- 步驟 5: 輸出圖片 (含互動裁切預覽框) -->
+      <!-- 步驟 5: 輸出圖片 (1:1 中心精準對齊裁切) -->
       <div id="step-4" class="step-content" style="display:none;">
         <div class="sec-h">匯出規格與預覽</div>
         <div class="form-row">
@@ -499,7 +499,7 @@
             <option value="jpeg">高品質 JPG</option>
           </select>
         </div>
-        <p style="font-size: 11px; color: var(--muted); margin: 6px 0 12px;">* 虛線框標記了目前輸出畫面範圍，已自動居中產品。你可拖曳視角縮放微調。</p>
+        <p style="font-size: 11px; color: var(--muted); margin: 6px 0 12px;">* 虛線框標記了目前輸出畫面範圍，已自動居中產品。可拖曳視角縮放微調。</p>
         <button class="primary-btn" onclick="executeExport()">立即下載打樣成品圖</button>
       </div>
 
@@ -534,23 +534,23 @@
   </main>
 
   <script>
-    // --- 高解析程序化真實材質生成系統 ---
+    // --- 高解析真實材質產生器 ---
     const bgTextures = {};
 
     function generateRealisticTextures() {
-      // 1. 攝影棚深灰磨砂
+      // 1. 攝影棚磨砂深灰
       const c1 = document.createElement('canvas'); c1.width = c1.height = 1024;
       const x1 = c1.getContext('2d');
       x1.fillStyle = '#16171d'; x1.fillRect(0, 0, 1024, 1024);
       const id1 = x1.getImageData(0, 0, 1024, 1024);
       for (let i = 0; i < id1.data.length; i += 4) {
-        const n = (Math.random() - 0.5) * 20;
+        const n = (Math.random() - 0.5) * 22;
         id1.data[i] += n; id1.data[i+1] += n; id1.data[i+2] += n;
       }
       x1.putImageData(id1, 0, 0);
       bgTextures['studio'] = c1;
 
-      // 2. 棉麻編織布紋
+      // 2. 棉麻布紋
       const c2 = document.createElement('canvas'); c2.width = c2.height = 1024;
       const x2 = c2.getContext('2d');
       x2.fillStyle = '#2c2a27'; x2.fillRect(0, 0, 1024, 1024);
@@ -570,12 +570,12 @@
       for (let i = 0; i < 300; i++) {
         x3.fillStyle = spots[Math.floor(Math.random() * spots.length)];
         x3.beginPath();
-        x3.arc(Math.random() * 1024, Math.random() * 1024, Math.random() * 10 + 2, 0, Math.PI * 2);
+        x3.arc(Math.random() * 1024, Math.random() * 1024, Math.random() * 8 + 2, 0, Math.PI * 2);
         x3.fill();
       }
       bgTextures['marble'] = c3;
 
-      // 4. 溫潤木質紋理
+      // 4. 原木紋理
       const c4 = document.createElement('canvas'); c4.width = c4.height = 1024;
       const x4 = c4.getContext('2d');
       x4.fillStyle = '#4a3525'; x4.fillRect(0, 0, 1024, 1024);
@@ -610,7 +610,7 @@
       return tex;
     }
 
-    // 黑膠唱片貼圖：中心孔洞與圓形標籤完美置中 (512, 512)
+    // 黑膠唱片：嚴格對齊 (512, 512)，中心孔洞與圓形標籤完美置中
     function makeVinylTexture() {
       const c = document.createElement('canvas');
       c.width = 1024; c.height = 1024;
@@ -676,7 +676,7 @@
         w: 314, h: 314, spine: 6, radius: 0, pages: 1,
         metalness: 0.05, roughness: 0.65,
         pos3D: { x: 0, y: 0, z: 0 },
-        pos2D: { x: 120, y: 150 },
+        pos2D: { x: 300, y: 250 },
         textures: {
           front: makeArt('MIDNIGHT ROUTE', 'LUNA HARBOR', '#161c28'),
           back: makeArt('TRACKLIST', '1. Harbor Lights\n2. Low Tide', '#1e2430'),
@@ -843,6 +843,7 @@
         const insideMat = new THREE.MeshStandardMaterial({ map: p.textures.inside || p.textures.front, metalness: p.metalness, roughness: p.roughness });
 
         if (p.type === 'vinyl') {
+          // Proofroom 擬真黑膠唱片封套
           const jacket = new THREE.Mesh(new THREE.BoxGeometry(w, h, spine), [backMat, backMat, backMat, backMat, frontMat, backMat]);
           jacket.position.y = h / 2;
           jacket.castShadow = shadowsEnabled; jacket.receiveShadow = shadowsEnabled;
@@ -869,6 +870,7 @@
           jacket.add(disc);
         }
         else if (p.type === 'cd_jewel') {
+          // CD 寶麗盒：透明硬質壓克力 + 內部托盤 + CD 嵌合
           const baseGroup = new THREE.Group();
           baseGroup.position.y = h / 2;
           const acrylMat = new THREE.MeshPhysicalMaterial({ transmission: 0.92, opacity: 1, transparent: true, roughness: 0.05, ior: 1.5, thickness: 0.08 });
@@ -913,6 +915,7 @@
           itemRoot.add(baseGroup);
         }
         else if (p.type === 'cd_digipak') {
+          // CD Digipak：紙質封面對折開合
           const digiGroup = new THREE.Group();
           digiGroup.position.y = h / 2;
 
@@ -949,6 +952,7 @@
           itemRoot.add(digiGroup);
         }
         else if (p.type === 'calendar_desk') {
+          // 桌曆：實體倒 V 三角座 + 頂部金屬雙線圈
           const calRoot = new THREE.Group();
           const standHeight = h;
           const halfBottom = (p.spine || 25) / 100 / 2;
@@ -963,8 +967,7 @@
 
           const standGeo = new THREE.ExtrudeGeometry(standShape, { depth: w, bevelEnabled: false });
           standGeo.center();
-          const standMat = new THREE.MeshStandardMaterial({ color: 0xf2ede4, roughness: 0.8 });
-          const standMesh = new THREE.Mesh(standGeo, standMat);
+          const standMesh = new THREE.Mesh(standGeo, new THREE.MeshStandardMaterial({ color: 0xf2ede4, roughness: 0.8 }));
           standMesh.rotation.y = Math.PI / 2;
           standMesh.position.y = standHeight / 2;
           standMesh.castShadow = shadowsEnabled; standMesh.receiveShadow = shadowsEnabled;
@@ -1241,14 +1244,14 @@
       ctx.restore();
     }
 
-    function render2DCanvas(targetCtx = null, customW = null, customH = null, isTransparentExport = false) {
+    function render2DCanvas(targetCtx = null, customW = null, customH = null, isTransparentExport = false, originShift = null) {
       const cvs = document.getElementById('canvas2d');
       const ctx = targetCtx || cvs.getContext('2d');
       const W = customW || cvs.clientWidth;
       const H = customH || cvs.clientHeight;
       if (!targetCtx) { cvs.width = W; cvs.height = H; }
 
-      // 繪製背景 (若為透明輸出則跳過底色填滿)
+      // 繪製背景
       if (!isTransparentExport) {
         if (currentBgMode === 'pure_white') {
           ctx.fillStyle = '#ffffff';
@@ -1267,8 +1270,15 @@
 
       ctx.save();
       const vt = viewTransform.plan2d;
-      ctx.translate(vt.x, vt.y);
-      ctx.scale(vt.scale, vt.scale);
+
+      // 若指定了輸出居中偏移
+      if (originShift) {
+        ctx.translate(originShift.x, originShift.y);
+        ctx.scale(originShift.scale, originShift.scale);
+      } else {
+        ctx.translate(vt.x, vt.y);
+        ctx.scale(vt.scale, vt.scale);
+      }
 
       const openVal = parseFloat(document.getElementById('openSlider').value);
       const lightDeg = parseFloat(document.getElementById('lightAngle')?.value || 45);
@@ -1566,7 +1576,7 @@
         parts = [
           { key: 'front', label: 'Digipak 外折封面' },
           { key: 'back', label: 'Digipak 內折底頁' },
-          { key: 'inside', label: '右托盤內襯圖稿' },
+          { key: 'inside', label: '托盤襯底插圖' },
           { key: 'disc', label: 'CD 光碟盤面 (中心自動開孔)' }
         ];
       } else if (p.type === 'calendar_desk' || p.type === 'notebook') {
@@ -1712,15 +1722,19 @@
       if (el) el.classList.add('active');
 
       if (mode === 'pure_white') {
-        updateCustomBg('#ffffff');
+        groundMesh.material.color.set(0xffffff);
         groundMesh.material.map = null;
+        groundMesh.material.transparent = false;
+        groundMesh.material.opacity = 1;
         groundMesh.material.needsUpdate = true;
         renderer.setClearColor(0xffffff, 1);
         document.getElementById('mainStage').style.background = '#ffffff';
       } else if (mode === 'transparent') {
         renderer.setClearColor(0x000000, 0);
-        groundMesh.material.color.set('#000000');
+        groundMesh.material.color.set(0x000000);
         groundMesh.material.map = null;
+        groundMesh.material.transparent = true;
+        groundMesh.material.opacity = 0; // 完全透明但承接陰影
         groundMesh.material.needsUpdate = true;
         document.getElementById('mainStage').style.background = 'transparent';
       } else {
@@ -1728,6 +1742,8 @@
         tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(8, 8);
         groundMesh.material.color.set(0xffffff);
         groundMesh.material.map = tex;
+        groundMesh.material.transparent = false;
+        groundMesh.material.opacity = 1;
         groundMesh.material.needsUpdate = true;
         renderer.setClearColor(mode === 'linen' ? 0x252422 : 0x14151a, 1);
         document.getElementById('mainStage').style.background = mode === 'linen' ? '#252422' : '#14151a';
@@ -1799,6 +1815,7 @@
       if (currentView === '2d') render2DCanvas();
     }
 
+    // --- 高解析 1:1 居中規格化輸出 (徹底解決偏移與背景透明問題) ---
     function executeExport() {
       const ratio = parseFloat(document.getElementById('exportRatio').value);
       const format = document.getElementById('exportFormat').value;
@@ -1808,36 +1825,81 @@
       let outW = 2048;
       let outH = Math.round(outW / ratio);
 
-      const offCanvas = document.createElement('canvas');
-      offCanvas.width = outW;
-      offCanvas.height = outH;
-      const offCtx = offCanvas.getContext('2d');
-
       const link = document.createElement('a');
       link.download = `zy-打樣成品-${Date.now()}.${isPng ? 'png' : 'jpg'}`;
 
       if (currentView === '3d') {
+        // 計算 3D 物品包圍盒，確保居中
+        const box = new THREE.Box3().setFromObject(studioRoot);
+        const center = new THREE.Vector3();
+        box.getCenter(center);
+        const size = new THREE.Vector3();
+        box.getSize(size);
+
+        // 備份相機狀態
         const origAspect = camera.aspect;
+        const origPos = camera.position.clone();
+        const origTarget = controls.target.clone();
+
         camera.aspect = ratio;
         camera.updateProjectionMatrix();
 
+        // 調整相機對齊中心
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const fov = camera.fov * (Math.PI / 180);
+        let cameraDist = Math.abs(maxDim / Math.sin(fov / 2)) * 0.9;
+        
+        const dir = new THREE.Vector3().subVectors(origPos, origTarget).normalize();
+        camera.position.copy(center).add(dir.multiplyScalar(cameraDist));
+        camera.lookAt(center);
+
         renderer.setSize(outW, outH);
+        
+        // 若為透明，暫時完全隱藏地板
+        const groundPrevVisible = groundMesh.visible;
         if (isTransparent) {
+          groundMesh.visible = false;
           renderer.setClearColor(0x000000, 0);
         }
-        renderer.render(scene, camera);
 
+        renderer.render(scene, camera);
         link.href = renderer.domElement.toDataURL(isPng ? 'image/png' : 'image/jpeg', 0.95);
 
+        // 還原
+        if (isTransparent) groundMesh.visible = groundPrevVisible;
         const container = document.getElementById('viewport3d');
         camera.aspect = container.clientWidth / container.clientHeight;
+        camera.position.copy(origPos);
+        camera.lookAt(origTarget);
         camera.updateProjectionMatrix();
         renderer.setSize(container.clientWidth, container.clientHeight);
-        renderer.setClearColor(currentBgMode === 'transparent' ? 0x000000 : 0x14151a, currentBgMode === 'transparent' ? 0 : 1);
+        renderer.setClearColor(currentBgMode === 'transparent' ? 0x000000 : (currentBgMode === 'pure_white' ? 0xffffff : 0x14151a), currentBgMode === 'transparent' ? 0 : 1);
       } else if (currentView === 'die') {
         link.href = document.getElementById('canvasDie').toDataURL(isPng ? 'image/png' : 'image/jpeg', 0.95);
       } else {
-        render2DCanvas(offCtx, outW, outH, isTransparent);
+        // 2D 模式精準計算整體商品重心，縮放並置中至 1:1 或指定比例畫布中央
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        products.forEach(p => {
+          minX = Math.min(minX, p.pos2D.x);
+          maxX = Math.max(maxX, p.pos2D.x + p.w * 1.5);
+          minY = Math.min(minY, p.pos2D.y);
+          maxY = Math.max(maxY, p.pos2D.y + p.h * 1.5);
+        });
+        const totalW = maxX - minX;
+        const totalH = maxY - minY;
+        const cx = minX + totalW / 2;
+        const cy = minY + totalH / 2;
+
+        const offCanvas = document.createElement('canvas');
+        offCanvas.width = outW;
+        offCanvas.height = outH;
+        const offCtx = offCanvas.getContext('2d');
+
+        const scale = Math.min((outW * 0.75) / totalW, (outH * 0.75) / totalH);
+        const shiftX = outW / 2 - cx * scale;
+        const shiftY = outH / 2 - cy * scale;
+
+        render2DCanvas(offCtx, outW, outH, isTransparent, { x: shiftX, y: shiftY, scale: scale });
         link.href = offCanvas.toDataURL(isPng ? 'image/png' : 'image/jpeg', 0.95);
       }
 
