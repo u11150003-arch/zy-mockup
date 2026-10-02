@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>zy產品照打樣室</title>
+  <title>zy產品照打樣室 · 物理打樣管線</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Montserrat:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
@@ -182,7 +182,6 @@
       cursor: pointer;
     }
 
-    /* 貼圖調整區塊 */
     .texture-item-box {
       border: 1px solid var(--line-2);
       border-radius: 8px;
@@ -356,7 +355,7 @@
     </div>
 
     <div class="panel-scroll" id="stepPanels">
-      <!-- 步驟 1: 品項與尺寸 + 專案保存區 (密碼 0411，無提示) -->
+      <!-- 步驟 1: 品項與尺寸 + 專案保存區 (密碼 0411) -->
       <div id="step-0" class="step-content">
         <div class="project-auth-box">
           <div class="sec-h" style="margin-bottom:6px;">
@@ -434,7 +433,7 @@
         </div>
       </div>
 
-      <!-- 步驟 2: 紙材與工藝 (Proofroom 微表面質感) -->
+      <!-- 步驟 2: 紙材與工藝 -->
       <div id="step-1" class="step-content" style="display:none;">
         <div class="sec-h">材質紋理預設</div>
         <div class="grid-3" style="margin-bottom: 14px;">
@@ -456,15 +455,15 @@
         </div>
       </div>
 
-      <!-- 步驟 3: 部件貼圖 (支援獨立縮放、位移與比例修正) -->
+      <!-- 步驟 3: 部件貼圖 -->
       <div id="step-2" class="step-content" style="display:none;">
         <div class="sec-h">獨立部件圖稿替換與比例調整</div>
         <div id="uploadBoxContainer"></div>
         <input type="file" id="fileIn" style="display:none;" accept="image/*">
-        <p style="font-size: 11px; color: var(--muted); margin-top: 8px;">* 圖稿微調會根據產品物理尺寸等比同步於 2D/3D。</p>
+        <p style="font-size: 11px; color: var(--muted); margin-top: 8px;">* 支援高解析 PNG/JPG。微調後 2D 與 3D 顯示保證等比一致。</p>
       </div>
 
-      <!-- 步驟 4: 光線與場景 (Proofroom 專業商攝光照) -->
+      <!-- 步驟 4: 光線與場景 -->
       <div id="step-3" class="step-content" style="display:none;">
         <div class="sec-h">攝影棚燈光氛圍</div>
         <div class="form-row">
@@ -498,7 +497,7 @@
         </div>
       </div>
 
-      <!-- 步驟 5: 輸出圖片 (1:1 中心精準對齊裁切) -->
+      <!-- 步驟 5: 輸出圖片 -->
       <div id="step-4" class="step-content" style="display:none;">
         <div class="sec-h">匯出規格與預覽</div>
         <div class="form-row">
@@ -530,7 +529,6 @@
     <canvas id="canvas2d"></canvas>
     <canvas id="canvasDie"></canvas>
     
-    <!-- 裁切框視覺輔助 -->
     <div id="exportGuideBox">
       <div id="exportGuideTag">1:1 匯出範圍預覽</div>
     </div>
@@ -538,12 +536,12 @@
     <div class="bottom-bar" id="bottomBar">
       <div class="angle-btns">
         <button class="angle-btn" id="btnPan" onclick="togglePanMode()">✋ 平移畫面</button>
-        <button class="angle-btn" onclick="setCameraAngle('top')">俯視</button>
-        <button class="angle-btn active" onclick="setCameraAngle('iso')">斜 45°</button>
-        <button class="angle-btn" onclick="setCameraAngle('flat')">平放地面</button>
-        <button class="angle-btn" onclick="setCameraAngle('low')">低角度</button>
-        <button class="angle-btn" onclick="setCameraAngle('side')">側面</button>
-        <button class="angle-btn" onclick="setCameraAngle('back')">翻面</button>
+        <button class="angle-btn" onclick="setCameraAngle('top', this)">俯視</button>
+        <button class="angle-btn active" onclick="setCameraAngle('iso', this)">斜 45°</button>
+        <button class="angle-btn" onclick="setCameraAngle('flat', this)">平放地面</button>
+        <button class="angle-btn" onclick="setCameraAngle('low', this)">低角度</button>
+        <button class="angle-btn" onclick="setCameraAngle('side', this)">側面</button>
+        <button class="angle-btn" onclick="setCameraAngle('back', this)">翻面</button>
       </div>
       <div class="interact-row">
         <span id="openLabel">開闔 / 翻頁 / 抽出</span>
@@ -554,21 +552,20 @@
 
   <script>
     // ==========================================
-    // 1. 核心貼圖合成與比例轉換引擎 (解決 2D/3D 變形問題)
+    // 1. 核心貼圖合成與物理比例轉換引擎
     // ==========================================
     function composeTextureCanvas(imgOrCanvas, options = {}, isDisc = false, pW = 100, pH = 100) {
       const { scale = 1, offsetX = 0, offsetY = 0, rotate = 0, fit = 'cover' } = options;
       const c = document.createElement('canvas');
       
-      // 動態依照物理比例生成畫布，避免 3D 拉伸
       const maxRes = 1536;
       const ratio = pW / pH;
       if (ratio > 1) { 
         c.width = maxRes; 
-        c.height = maxRes / ratio; 
+        c.height = Math.round(maxRes / ratio); 
       } else { 
         c.height = maxRes; 
-        c.width = maxRes * ratio; 
+        c.width = Math.round(maxRes * ratio); 
       }
       
       const ctx = c.getContext('2d');
@@ -603,7 +600,6 @@
       ctx.drawImage(imgOrCanvas, dx, dy, drawW, drawH);
       ctx.restore();
 
-      // 若為光碟或黑膠，自動打孔
       if (isDisc) {
         ctx.save();
         ctx.globalCompositeOperation = 'destination-out';
@@ -705,20 +701,13 @@
     let shadowsEnabled = true;
     let currentBgMode = 'studio';
     let isPanActive = false;
+    let currentView = '3d';
 
     let products = [
       {
-        id: 'p1',
-        type: 'vinyl',
-        w: 314, h: 314, spine: 6, radius: 0, pages: 1,
-        metalness: 0.05, roughness: 0.65,
-        pos3D: { x: 0, y: 0, z: 0 },
-        pos2D: { x: 260, y: 220 },
-        textures: {
-          front: makeArt('MIDNIGHT ROUTE', 'LUNA HARBOR', '#161c28'),
-          back: makeArt('TRACKLIST', '1. Harbor Lights\n2. Low Tide', '#1e2430'),
-          disc: makeVinylTexture()
-        }
+        id: 'p1', type: 'cd_jewel', w: 142, h: 125, spine: 10, radius: 2, pages: 1,
+        metalness: 0.05, roughness: 0.65, pos3D: { x: 0, y: 0, z: 0 }, pos2D: { x: 260, y: 220 },
+        textures: { front: makeArt('JEWEL', 'CASE', '#2a3342'), back: makeArt('BACK INLAY', 'TRAY', '#1f242e'), disc: makeCDTexture() }
       }
     ];
     let selectedId = 'p1';
@@ -738,16 +727,10 @@
     }
 
     // ==========================================
-    // 2. 3D 渲染系統 (Proofroom 物理引擎光照與環境)
+    // 2. 3D 渲染系統 (修復報錯 + Proofroom 物理光澤)
     // ==========================================
     let scene, camera, renderer, controls, studioRoot, groundMesh;
     let keyLight, fillLight, rimLight, pmremGenerator;
-    let is3DDragging = false, drag3DItem = null;
-    const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
-    const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
-    const planeIntersect = new THREE.Vector3();
-    const dragOffset = new THREE.Vector3();
 
     function init3D() {
       const container = document.getElementById('viewport3d');
@@ -763,23 +746,27 @@
       renderer.toneMappingExposure = 1.0;
       container.appendChild(renderer.domElement);
 
-      // 動態建立 Proofroom 攝影棚 HDR 環境反射 (強化金屬與玻璃光澤)
-      pmremGenerator = new THREE.PMREMGenerator(renderer);
-      pmremGenerator.compileEquirectangularShader();
-      buildStudioEnvironment();
+      try {
+        pmremGenerator = new THREE.PMREMGenerator(renderer);
+        pmremGenerator.compileEquirectangularShader();
+        buildStudioEnvironment();
+      } catch (e) {
+        console.warn('HDR Environment generation skipped:', e);
+      }
 
       controls = new THREE.OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
       controls.dampingFactor = 0.05;
       controls.screenSpacePanning = true;
+      controls.enablePan = true;
+      controls.panSpeed = 1.2;
       controls.maxPolarAngle = Math.PI / 2 + 0.02;
 
-      // Proofroom 等級打光
-      keyLight = new THREE.DirectionalLight(0xffffff, 2.5);
+      keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
       keyLight.position.set(5, 10, 5);
       keyLight.castShadow = true;
       keyLight.shadow.mapSize.set(2048, 2048);
-      keyLight.shadow.bias = -0.0005;
+      keyLight.shadow.bias = -0.0002;
       scene.add(keyLight);
 
       fillLight = new THREE.DirectionalLight(0xdbe6ff, 1.2);
@@ -803,62 +790,9 @@
       studioRoot = new THREE.Group();
       scene.add(studioRoot);
 
-      const dom = renderer.domElement;
-      dom.addEventListener('mousedown', (e) => {
-        if (e.button !== 0 || currentView !== '3d' || isPanActive) return;
-        const rect = dom.getBoundingClientRect();
-        mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-        mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-        raycaster.setFromCamera(mouse, camera);
-
-        const intersects = raycaster.intersectObjects(studioRoot.children, true);
-        if (intersects.length > 0) {
-          let rootObj = intersects[0].object;
-          while (rootObj.parent && rootObj.parent !== studioRoot) {
-            rootObj = rootObj.parent;
-          }
-          if (rootObj && rootObj.userData.id) {
-            selectProduct(rootObj.userData.id);
-            drag3DItem = products.find(p => p.id === rootObj.userData.id);
-            if (drag3DItem) {
-              is3DDragging = true;
-              controls.enabled = false;
-              raycaster.ray.intersectPlane(plane, planeIntersect);
-              dragOffset.copy(planeIntersect).sub(rootObj.position);
-            }
-          }
-        }
-      });
-
-      window.addEventListener('mousemove', (e) => {
-        if (is3DDragging && drag3DItem && currentView === '3d') {
-          const rect = dom.getBoundingClientRect();
-          mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-          mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-          raycaster.setFromCamera(mouse, camera);
-          if (raycaster.ray.intersectPlane(plane, planeIntersect)) {
-            drag3DItem.pos3D.x = planeIntersect.x - dragOffset.x;
-            drag3DItem.pos3D.z = planeIntersect.z - dragOffset.z;
-            const obj3D = studioRoot.children.find(c => c.userData.id === drag3DItem.id);
-            if (obj3D) {
-              obj3D.position.x = drag3DItem.pos3D.x;
-              obj3D.position.z = drag3DItem.pos3D.z;
-            }
-          }
-        }
-      });
-
-      window.addEventListener('mouseup', () => {
-        if (is3DDragging) {
-          is3DDragging = false;
-          controls.enabled = true;
-          drag3DItem = null;
-        }
-      });
-
       calculateAutoX();
       buildAll3DModels();
-      setCameraAngle('iso');
+      setCameraAngle('iso'); // 不帶 event，安全無崩潰呼叫
       renderLoop();
     }
 
@@ -867,19 +801,19 @@
       c.width = 1024; c.height = 512;
       const ctx = c.getContext('2d');
 
-      ctx.fillStyle = '#050505';
+      ctx.fillStyle = '#0a0a0c';
       ctx.fillRect(0, 0, 1024, 512);
 
       const g1 = ctx.createRadialGradient(256, 128, 0, 256, 128, 250);
       g1.addColorStop(0, '#ffffff');
-      g1.addColorStop(0.2, '#dddddd');
-      g1.addColorStop(1, '#050505');
+      g1.addColorStop(0.25, '#c0c8d8');
+      g1.addColorStop(1, '#0a0a0c');
       ctx.fillStyle = g1;
       ctx.fillRect(0, 0, 512, 256);
 
       const g2 = ctx.createRadialGradient(800, 256, 0, 800, 256, 200);
-      g2.addColorStop(0, '#aaccff');
-      g2.addColorStop(1, '#050505');
+      g2.addColorStop(0, '#b0c4de');
+      g2.addColorStop(1, '#0a0a0c');
       ctx.fillStyle = g2;
       ctx.fillRect(512, 128, 512, 384);
 
@@ -889,13 +823,26 @@
       scene.environment = renderTarget.texture;
     }
 
+    // 修復平移畫面響應：改寫滑鼠按鍵配置與指標狀態
     function togglePanMode() {
       isPanActive = !isPanActive;
       const btn = document.getElementById('btnPan');
       btn.classList.toggle('active', isPanActive);
-      controls.mouseButtons = isPanActive
-        ? { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE }
-        : { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
+      if (isPanActive) {
+        controls.mouseButtons = {
+          LEFT: THREE.MOUSE.PAN,
+          MIDDLE: THREE.MOUSE.DOLLY,
+          RIGHT: THREE.MOUSE.ROTATE
+        };
+        renderer.domElement.style.cursor = 'grab';
+      } else {
+        controls.mouseButtons = {
+          LEFT: THREE.MOUSE.ROTATE,
+          MIDDLE: THREE.MOUSE.DOLLY,
+          RIGHT: THREE.MOUSE.PAN
+        };
+        renderer.domElement.style.cursor = 'default';
+      }
     }
 
     function buildAll3DModels() {
@@ -940,25 +887,27 @@
           jacket.add(disc);
         }
         else if (p.type === 'cd_jewel') {
-          // CD 寶麗盒：修正為實體不透明紙卡 + 透明壓克力外殼
+          // 修復：CD 寶麗盒 - 外殼透明壓克力，背面與內頁封面均為不透明實體紙張
           const baseGroup = new THREE.Group();
           baseGroup.position.y = h / 2;
-          const acrylMat = new THREE.MeshPhysicalMaterial({ transmission: 0.92, opacity: 1, transparent: true, roughness: 0.05, ior: 1.5, thickness: 0.08 });
+          const acrylMat = new THREE.MeshPhysicalMaterial({ transmission: 0.96, opacity: 1, transparent: true, roughness: 0.04, ior: 1.5, thickness: 0.05 });
 
-          const bottomCase = new THREE.Mesh(new THREE.BoxGeometry(w, h, spine * 0.5), acrylMat);
+          // 下蓋透明外殼
+          const bottomCase = new THREE.Mesh(new THREE.BoxGeometry(w, h, spine * 0.45), acrylMat);
           bottomCase.position.z = -spine * 0.25;
           baseGroup.add(bottomCase);
 
-          // 封底紙卡 Back Inlay (不透明) - 改用 BoxGeometry 確保實體不穿透
+          // 封底紙卡 Back Inlay (不透明實體厚度，封底絕不透光)
           const backInlay = new THREE.Mesh(new THREE.BoxGeometry(w * 0.98, h * 0.98, 0.005), backMat);
-          backInlay.position.z = -spine * 0.2;
+          backInlay.position.z = -spine * 0.22;
           baseGroup.add(backInlay);
 
-          // 添加深色底層托盤避免光碟懸空
+          // 黑色內托盤
           const trayMesh = new THREE.Mesh(new THREE.BoxGeometry(w * 0.95, h * 0.95, spine * 0.1), new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.8 }));
-          trayMesh.position.z = -spine * 0.05;
+          trayMesh.position.z = -spine * 0.06;
           baseGroup.add(trayMesh);
 
+          // CD 光碟
           const cdShape = new THREE.Shape();
           cdShape.absarc(0, 0, w * 0.42, 0, Math.PI * 2, false);
           const cdHole = new THREE.Path();
@@ -975,6 +924,7 @@
           cdMesh.castShadow = shadowsEnabled;
           baseGroup.add(cdMesh);
 
+          // 左鉸鏈水平轉動
           const hingeGroup = new THREE.Group();
           hingeGroup.position.set(-w / 2, 0, spine * 0.25);
 
@@ -982,9 +932,9 @@
           lidMesh.position.set(w / 2, 0, 0);
           lidMesh.castShadow = shadowsEnabled;
 
-          // 歌詞本 Booklet (正面遮蓋，不透明實體)
+          // 歌詞本 Booklet (正面遮蓋，不透明實體紙張)
           const booklet = new THREE.Mesh(new THREE.BoxGeometry(w * 0.94, h * 0.94, 0.005), frontMat);
-          booklet.position.set(w / 2, 0, -spine * 0.18);
+          booklet.position.set(w / 2, 0, -spine * 0.16);
           hingeGroup.add(lidMesh, booklet);
 
           hingeGroup.name = 'hinge';
@@ -992,7 +942,7 @@
           itemRoot.add(baseGroup);
         }
         else if (p.type === 'cd_digipak') {
-          // CD Digipak：左封面圍繞左側 Y 軸自然向左水平翻開
+          // CD Digipak：左封面水平翻開
           const digiGroup = new THREE.Group();
           digiGroup.position.y = h / 2;
 
@@ -1193,11 +1143,17 @@
       if (currentView === '2d') render2DCanvas();
     }
 
-    function setCameraAngle(angle) {
+    // 修復：安全切換視角，絕不直接讀取 window.event 避免拋出例外
+    function setCameraAngle(angle, btnEl = null) {
       document.querySelectorAll('.angle-btn').forEach(b => {
         if (b.id !== 'btnPan') b.classList.remove('active');
       });
-      event?.target?.classList?.add('active');
+      if (btnEl) {
+        btnEl.classList.add('active');
+      } else {
+        const targetBtn = Array.from(document.querySelectorAll('.angle-btn')).find(b => b.getAttribute('onclick')?.includes(`'${angle}'`));
+        if (targetBtn) targetBtn.classList.add('active');
+      }
 
       const curr = getSelectedProduct();
       const dist = (curr.w / 100) * 2.8;
@@ -1230,7 +1186,7 @@
     }
 
     // ==========================================
-    // 3. 2D 畫布與展開圖平移縮放
+    // 3. 2D 畫布與展開圖平移縮放 (綁定實體物理比例)
     // ==========================================
     const viewTransform = {
       die: { x: 0, y: 0, scale: 1 },
@@ -1375,7 +1331,6 @@
           ctx.shadowColor = 'transparent';
         }
 
-        // 黑膠唱片：2D 正圓裁剪與穿透孔
         if (p.type === 'vinyl' && openVal > 0) {
           ctx.save();
           const slideX = p.w * openVal * 0.78;
@@ -1399,7 +1354,6 @@
           ctx.restore();
         }
 
-        // CD 光碟：2D 正圓裁剪與穿透孔
         if ((p.type === 'cd_jewel' || p.type === 'cd_digipak') && openVal > 0) {
           ctx.save();
           const slideX = p.w * openVal * 0.85;
@@ -1876,16 +1830,16 @@
 
     function applyLightPreset(type) {
       if (type === 'studio') {
-        keyLight.position.set(5, 8, 5);
+        keyLight.position.set(5, 10, 5);
         keyLight.color.setHex(0xffffff);
-        keyLight.intensity = 2.5;
+        keyLight.intensity = 2.2;
         fillLight.position.set(-6, 4, -2);
         fillLight.intensity = 1.2;
         rimLight.intensity = 1.5;
       } else if (type === 'rim') {
         keyLight.position.set(2, 4, -7);
         keyLight.color.setHex(0xdce6ff);
-        keyLight.intensity = 3.0;
+        keyLight.intensity = 2.8;
         fillLight.position.set(7, 2, 3);
         fillLight.intensity = 0.5;
         rimLight.intensity = 2.5;
@@ -1894,7 +1848,7 @@
         keyLight.color.setHex(0xffffff);
         keyLight.intensity = 3.5;
         fillLight.intensity = 0.2;
-        rimLight.intensity = 0.5;
+        rimLight.intensity = 0.4;
       }
       document.getElementById('lightIntensity').value = keyLight.intensity;
       if (currentView === '2d') render2DCanvas();
