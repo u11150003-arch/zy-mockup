@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>zy產品照打樣室 · Proofroom Engine</title>
+  <title>zy產品照打樣室</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Montserrat:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
@@ -80,7 +80,7 @@
     .top-tab.active { background: #fff; color: #111; font-weight: 600; }
 
     aside {
-      width: 380px;
+      width: 390px;
       height: 100vh;
       background: var(--panel);
       border-right: 1px solid var(--line);
@@ -182,25 +182,40 @@
       cursor: pointer;
     }
 
-    .upload-box {
-      border: 1px dashed var(--line-2);
-      padding: 10px 12px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 8px;
-      background: var(--panel-2);
-    }
-    .upload-box span { font-size: 12px; }
-    .upload-box button {
-      background: var(--raised);
+    /* 貼圖調整區塊 */
+    .texture-item-box {
       border: 1px solid var(--line-2);
-      color: #fff;
-      padding: 4px 10px;
-      border-radius: 4px;
+      border-radius: 8px;
+      background: var(--panel-2);
+      padding: 10px;
+      margin-bottom: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .tex-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .tex-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding-top: 6px;
+      border-top: 1px dashed var(--line);
+    }
+    .tex-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       font-size: 11px;
-      cursor: pointer;
+      color: var(--muted);
+    }
+    .tex-row input[type="range"] {
+      width: 110px;
     }
 
     .product-list-chips {
@@ -341,7 +356,7 @@
     </div>
 
     <div class="panel-scroll" id="stepPanels">
-      <!-- 步驟 1: 品項與尺寸 + 專案管理 (密碼保護，無明文提示) -->
+      <!-- 步驟 1: 品項與尺寸 + 專案保存區 (密碼 0411，無提示) -->
       <div id="step-0" class="step-content">
         <div class="project-auth-box">
           <div class="sec-h" style="margin-bottom:6px;">
@@ -441,12 +456,12 @@
         </div>
       </div>
 
-      <!-- 步驟 3: 部件貼圖 -->
+      <!-- 步驟 3: 部件貼圖 (支援獨立縮放、位移與比例修正) -->
       <div id="step-2" class="step-content" style="display:none;">
-        <div class="sec-h">獨立部件圖稿替換</div>
+        <div class="sec-h">獨立部件圖稿替換與比例調整</div>
         <div id="uploadBoxContainer"></div>
         <input type="file" id="fileIn" style="display:none;" accept="image/*">
-        <p style="font-size: 11px; color: var(--muted); margin-top: 8px;">* 支援高解析 PNG/JPG。各部件獨立指定，3D/2D 即時映射。</p>
+        <p style="font-size: 11px; color: var(--muted); margin-top: 8px;">* 支援高解析 PNG/JPG。可單獨調整各面圖稿之縮放、平移與旋轉。</p>
       </div>
 
       <!-- 步驟 4: 光線與場景 (Proofroom 專業商攝光照) -->
@@ -479,7 +494,7 @@
 
         <div class="form-row" style="margin-top:10px;">
           <label>自訂展台底色</label>
-          <input type="color" id="customBgColor" value="#0f0f10" oninput="updateCustomBg(this.value)">
+          <input type="color" id="customBgColor" value="#09090a" oninput="updateCustomBg(this.value)">
         </div>
       </div>
 
@@ -538,7 +553,53 @@
   </main>
 
   <script>
-    // --- 預設貼圖生成 (黑膠同心紋、白底圓標、CD鏡面鋁光) ---
+    // --- 貼圖合成與比例轉換引擎 (解決變形問題) ---
+    function composeTextureCanvas(imgOrCanvas, options = {}, isDisc = false) {
+      const { scale = 1, offsetX = 0, offsetY = 0, rotate = 0, fit = 'cover' } = options;
+      const c = document.createElement('canvas');
+      c.width = 1024; c.height = 1024;
+      const ctx = c.getContext('2d');
+
+      ctx.save();
+      ctx.translate(512, 512);
+      ctx.rotate((rotate * Math.PI) / 180);
+
+      const srcW = imgOrCanvas.width || imgOrCanvas.videoWidth || 1024;
+      const srcH = imgOrCanvas.height || imgOrCanvas.videoHeight || 1024;
+
+      let drawW, drawH;
+      if (fit === 'contain') {
+        const ratio = Math.min(1024 / srcW, 1024 / srcH);
+        drawW = srcW * ratio * scale;
+        drawH = srcH * ratio * scale;
+      } else if (fit === 'stretch') {
+        drawW = 1024 * scale;
+        drawH = 1024 * scale;
+      } else { // cover
+        const ratio = Math.max(1024 / srcW, 1024 / srcH);
+        drawW = srcW * ratio * scale;
+        drawH = srcH * ratio * scale;
+      }
+
+      const dx = -drawW / 2 + (offsetX * 1024);
+      const dy = -drawH / 2 + (offsetY * 1024);
+
+      ctx.drawImage(imgOrCanvas, dx, dy, drawW, drawH);
+      ctx.restore();
+
+      // 若為光碟或黑膠，自動打孔維持同心圓幾何孔洞
+      if (isDisc) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.beginPath();
+        ctx.arc(512, 512, 70, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      return c;
+    }
+
     function makeArt(text, sub, bg = '#161c28') {
       const c = document.createElement('canvas');
       c.width = 1024; c.height = 1024;
@@ -557,7 +618,7 @@
       ctx.font = '24px sans-serif';
       ctx.fillText(sub, 90, 280);
       const tex = new THREE.CanvasTexture(c);
-      tex.userData = { dataUrl: c.toDataURL() };
+      tex.userData = { rawImage: c, dataUrl: c.toDataURL(), transform: { scale: 1, offsetX: 0, offsetY: 0, rotate: 0, fit: 'cover' } };
       return tex;
     }
 
@@ -569,13 +630,11 @@
       ctx.fillStyle = '#0c0d10';
       ctx.fillRect(0, 0, 1024, 1024);
 
-      // 黑膠溝槽
       for (let r = 210; r < 500; r += 2) {
         ctx.strokeStyle = `rgba(255,255,255,${0.025 + (r % 6 === 0 ? 0.04 : 0)})`;
         ctx.lineWidth = 1;
         ctx.beginPath(); ctx.arc(512, 512, r, 0, Math.PI * 2); ctx.stroke();
       }
-      // 中心圓標籤
       ctx.fillStyle = '#f4f1ea';
       ctx.beginPath(); ctx.arc(512, 512, 175, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = '#111';
@@ -584,8 +643,14 @@
       ctx.fillText('MIDNIGHT', 512, 480);
       ctx.font = '18px sans-serif';
       ctx.fillText('SIDE A · 33 RPM', 512, 530);
+
+      // 中心穿透孔
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.beginPath(); ctx.arc(512, 512, 38, 0, Math.PI * 2); ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+
       const tex = new THREE.CanvasTexture(c);
-      tex.userData = { dataUrl: c.toDataURL() };
+      tex.userData = { rawImage: c, dataUrl: c.toDataURL(), transform: { scale: 1, offsetX: 0, offsetY: 0, rotate: 0, fit: 'cover' } };
       return tex;
     }
 
@@ -613,8 +678,14 @@
       ctx.font = 'bold 34px sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText('LUNA HARBOR', 512, 360);
+
+      // 中心穿透孔
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.beginPath(); ctx.arc(512, 512, 70, 0, Math.PI * 2); ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+
       const tex = new THREE.CanvasTexture(c);
-      tex.userData = { dataUrl: c.toDataURL() };
+      tex.userData = { rawImage: c, dataUrl: c.toDataURL(), transform: { scale: 1, offsetX: 0, offsetY: 0, rotate: 0, fit: 'cover' } };
       return tex;
     }
 
@@ -654,9 +725,9 @@
       products.forEach(p => p.pos3D.x -= centerX);
     }
 
-    // --- 3D 渲染系統 (Proofroom 物理引擎) ---
+    // --- 3D 渲染系統 (Proofroom 物理引擎管線) ---
     let scene, camera, renderer, controls, studioRoot, groundMesh;
-    let keyLight, fillLight, rimLight;
+    let keyLight, fillLight, rimLight, pmremGenerator;
     let is3DDragging = false, drag3DItem = null;
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
@@ -677,6 +748,11 @@
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.0;
       container.appendChild(renderer.domElement);
+
+      // 動態建立 Proofroom 攝影棚 HDR 環境反射
+      pmremGenerator = new THREE.PMREMGenerator(renderer);
+      pmremGenerator.compileEquirectangularShader();
+      buildStudioEnvironment();
 
       controls = new THREE.OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
@@ -701,7 +777,7 @@
       rimLight.position.set(0, 6, -6);
       scene.add(rimLight);
 
-      scene.add(new THREE.AmbientLight(0xffffff, 0.45));
+      scene.add(new THREE.AmbientLight(0xffffff, 0.4));
 
       // 地板：陰影接收材質
       const gGeo = new THREE.PlaneGeometry(80, 80);
@@ -775,6 +851,35 @@
       renderLoop();
     }
 
+    // 建立真實攝影棚反射貼圖 (解決金屬塑膠反光無力感)
+    function buildStudioEnvironment() {
+      const c = document.createElement('canvas');
+      c.width = 1024; c.height = 512;
+      const ctx = c.getContext('2d');
+
+      ctx.fillStyle = '#111318';
+      ctx.fillRect(0, 0, 1024, 512);
+
+      // 主柔光箱高光
+      const g1 = ctx.createRadialGradient(256, 128, 10, 256, 128, 200);
+      g1.addColorStop(0, '#ffffff');
+      g1.addColorStop(0.5, '#778899');
+      g1.addColorStop(1, '#111318');
+      ctx.fillStyle = g1;
+      ctx.fillRect(100, 0, 312, 256);
+
+      // 側輪廓反光
+      const g2 = ctx.createRadialGradient(800, 256, 10, 800, 256, 180);
+      g2.addColorStop(0, '#eef4ff');
+      g2.addColorStop(1, '#111318');
+      ctx.fillStyle = g2;
+      ctx.fillRect(650, 100, 300, 312);
+
+      const envTex = new THREE.CanvasTexture(c);
+      const renderTarget = pmremGenerator.fromEquirectangular(envTex);
+      scene.environment = renderTarget.texture;
+    }
+
     function togglePanMode() {
       isPanActive = !isPanActive;
       const btn = document.getElementById('btnPan');
@@ -828,7 +933,7 @@
           jacket.add(disc);
         }
         else if (p.type === 'cd_jewel') {
-          // CD 寶麗盒：透明硬盒外殼，未開啟時正面遮蓋
+          // CD 寶麗盒：透明硬盒外殼，未開啟時正面完全遮蓋，開闔時向左水平旋轉
           const baseGroup = new THREE.Group();
           baseGroup.position.y = h / 2;
           const acrylMat = new THREE.MeshPhysicalMaterial({ transmission: 0.92, opacity: 1, transparent: true, roughness: 0.05, ior: 1.5, thickness: 0.08 });
@@ -857,6 +962,7 @@
           cdMesh.castShadow = shadowsEnabled;
           baseGroup.add(cdMesh);
 
+          // 左鉸鏈水平轉軸
           const hingeGroup = new THREE.Group();
           hingeGroup.position.set(-w / 2, 0, spine * 0.25);
 
@@ -873,12 +979,13 @@
           itemRoot.add(baseGroup);
         }
         else if (p.type === 'cd_digipak') {
-          // CD Digipak：封面折疊向左掀開，光碟在右內頁
+          // CD Digipak：修復開闔方向！左封面圍繞 Y 軸自然向左水平翻開
           const digiGroup = new THREE.Group();
           digiGroup.position.y = h / 2;
 
+          // 右內頁（托盤襯底 + 實體光碟）
           const rightPage = new THREE.Mesh(new THREE.BoxGeometry(w, h, spine * 0.4), insideMat);
-          rightPage.position.x = w / 2;
+          rightPage.position.set(w / 2, 0, 0);
           rightPage.castShadow = shadowsEnabled; rightPage.receiveShadow = shadowsEnabled;
           digiGroup.add(rightPage);
 
@@ -897,6 +1004,7 @@
           cdMesh.castShadow = shadowsEnabled;
           digiGroup.add(cdMesh);
 
+          // 左封面（水平書脊鉸鏈）
           const leftHinge = new THREE.Group();
           leftHinge.position.set(0, 0, spine * 0.2);
 
@@ -1030,6 +1138,7 @@
       }
     }
 
+    // 開闔控制：嚴格修正旋轉方向 (向左掀開 0 到 -150 度)
     function onInteractChange(val) {
       val = parseFloat(val);
       const curr = getSelectedProduct();
@@ -1065,10 +1174,12 @@
         }
         else if (curr.type === 'cd_digipak') {
           const hinge = itemGroup.getObjectByName('hinge');
-          if (hinge) hinge.rotation.y = val * (Math.PI * 0.85);
+          // 向左水平旋轉掀開
+          if (hinge) hinge.rotation.y = -val * (Math.PI * 0.82);
         }
-        else {
+        else if (curr.type === 'cd_jewel') {
           const hinge = itemGroup.getObjectByName('hinge');
+          // 壓克力盒向左水平掀開
           if (hinge) hinge.rotation.y = -val * (Math.PI * 0.78);
         }
       }
@@ -1401,7 +1512,10 @@
           const texData = {};
           Object.keys(p.textures).forEach(k => {
             if (p.textures[k]?.userData?.dataUrl) {
-              texData[k] = p.textures[k].userData.dataUrl;
+              texData[k] = {
+                dataUrl: p.textures[k].userData.dataUrl,
+                transform: p.textures[k].userData.transform || { scale: 1, offsetX: 0, offsetY: 0, rotate: 0, fit: 'cover' }
+              };
             }
           });
           return {
@@ -1430,11 +1544,18 @@
           const textures = {};
           if (sp.texData) {
             Object.keys(sp.texData).forEach(k => {
+              const item = sp.texData[k];
               const img = new Image();
-              img.src = sp.texData[k];
-              const t = new THREE.Texture(img);
-              img.onload = () => { t.needsUpdate = true; };
-              t.userData = { dataUrl: sp.texData[k] };
+              img.src = item.dataUrl;
+              const isDisc = (k === 'disc');
+              const compCanvas = composeTextureCanvas(img, item.transform, isDisc);
+              const t = new THREE.CanvasTexture(compCanvas);
+              img.onload = () => {
+                const refreshed = composeTextureCanvas(img, item.transform, isDisc);
+                t.image = refreshed;
+                t.needsUpdate = true;
+              };
+              t.userData = { rawImage: img, dataUrl: item.dataUrl, transform: item.transform };
               textures[k] = t;
             });
           }
@@ -1508,6 +1629,7 @@
       buildAll3DModels();
     }
 
+    // 同步貼圖上傳與比例微調控制器
     function syncUploadBoxes() {
       const p = getSelectedProduct();
       const container = document.getElementById('uploadBoxContainer');
@@ -1518,20 +1640,20 @@
         parts = [
           { key: 'front', label: '黑膠外套正面' },
           { key: 'back', label: '黑膠外套封底' },
-          { key: 'disc', label: '黑膠唱片盤面 (中心自動開孔)' }
+          { key: 'disc', label: '黑膠唱片盤面 (中心開孔)' }
         ];
       } else if (p.type === 'cd_jewel') {
         parts = [
-          { key: 'front', label: '歌詞本封面 (正面)' },
+          { key: 'front', label: '歌詞本封面 (正面遮蓋)' },
           { key: 'back', label: '底盒背卡 (封底)' },
-          { key: 'disc', label: 'CD 實體光碟盤面 (中心自動開孔)' }
+          { key: 'disc', label: 'CD 實體光碟盤面 (中心開孔)' }
         ];
       } else if (p.type === 'cd_digipak') {
         parts = [
-          { key: 'front', label: 'Digipak 外折封面' },
-          { key: 'back', label: 'Digipak 內折底頁' },
-          { key: 'inside', label: '托盤襯底插圖' },
-          { key: 'disc', label: 'CD 實體光碟盤面 (中心自動開孔)' }
+          { key: 'front', label: 'Digipak 外折封面 (向左掀開)' },
+          { key: 'back', label: 'Digipak 外折封底' },
+          { key: 'inside', label: '右托盤襯底插圖' },
+          { key: 'disc', label: 'CD 實體光碟盤面 (中心開孔)' }
         ];
       } else if (p.type === 'calendar_desk' || p.type === 'notebook') {
         const total = p.pages || 5;
@@ -1543,11 +1665,71 @@
       }
 
       parts.forEach(pt => {
+        const tex = p.textures[pt.key];
+        const tf = (tex && tex.userData && tex.userData.transform) || { scale: 1, offsetX: 0, offsetY: 0, rotate: 0, fit: 'cover' };
+
         const box = document.createElement('div');
-        box.className = 'upload-box';
-        box.innerHTML = `<span>${pt.label}</span><button onclick="triggerUpload('${pt.key}')">替換照片</button>`;
+        box.className = 'texture-item-box';
+        box.innerHTML = `
+          <div class="tex-header">
+            <span>${pt.label}</span>
+            <button class="pill-btn" style="padding:3px 8px; font-size:11px;" onclick="triggerUpload('${pt.key}')">替換圖片</button>
+          </div>
+          <div class="tex-controls">
+            <div class="tex-row">
+              <label>適應比例</label>
+              <select onchange="updateTextureTransform('${pt.key}', 'fit', this.value)" style="width:110px; font-size:10px; padding:2px 6px;">
+                <option value="cover" ${tf.fit==='cover'?'selected':''}>等比填滿 (Cover)</option>
+                <option value="contain" ${tf.fit==='contain'?'selected':''}>等比包含 (Contain)</option>
+                <option value="stretch" ${tf.fit==='stretch'?'selected':''}>拉伸填滿 (Stretch)</option>
+              </select>
+            </div>
+            <div class="tex-row">
+              <label>縮放比例 (${Math.round(tf.scale*100)}%)</label>
+              <input type="range" min="0.5" max="2.5" step="0.05" value="${tf.scale}" oninput="updateTextureTransform('${pt.key}', 'scale', parseFloat(this.value))">
+            </div>
+            <div class="tex-row">
+              <label>水平平移</label>
+              <input type="range" min="-0.5" max="0.5" step="0.02" value="${tf.offsetX}" oninput="updateTextureTransform('${pt.key}', 'offsetX', parseFloat(this.value))">
+            </div>
+            <div class="tex-row">
+              <label>垂直平移</label>
+              <input type="range" min="-0.5" max="0.5" step="0.02" value="${tf.offsetY}" oninput="updateTextureTransform('${pt.key}', 'offsetY', parseFloat(this.value))">
+            </div>
+            <div class="tex-row">
+              <label>旋轉方向</label>
+              <select onchange="updateTextureTransform('${pt.key}', 'rotate', parseInt(this.value))" style="width:110px; font-size:10px; padding:2px 6px;">
+                <option value="0" ${tf.rotate===0?'selected':''}>0° 正常</option>
+                <option value="90" ${tf.rotate===90?'selected':''}>90° 順時針</option>
+                <option value="180" ${tf.rotate===180?'selected':''}>180° 翻轉</option>
+                <option value="270" ${tf.rotate===270?'selected':''}>270° 逆時針</option>
+              </select>
+            </div>
+          </div>
+        `;
         container.appendChild(box);
       });
+    }
+
+    // 更新各部位貼圖的幾何與畫布映射
+    function updateTextureTransform(partKey, prop, value) {
+      const p = getSelectedProduct();
+      const tex = p.textures[partKey];
+      if (!tex || !tex.userData || !tex.userData.rawImage) return;
+
+      if (!tex.userData.transform) {
+        tex.userData.transform = { scale: 1, offsetX: 0, offsetY: 0, rotate: 0, fit: 'cover' };
+      }
+      tex.userData.transform[prop] = value;
+
+      const isDisc = (partKey === 'disc');
+      const refreshed = composeTextureCanvas(tex.userData.rawImage, tex.userData.transform, isDisc);
+      tex.image = refreshed;
+      tex.needsUpdate = true;
+
+      buildAll3DModels();
+      if (currentView === 'die') renderDieCanvas();
+      if (currentView === '2d') render2DCanvas();
     }
 
     function addNewProduct(type) {
@@ -1618,11 +1800,15 @@
       reader.onload = ev => {
         const img = new Image();
         img.onload = () => {
-          const tex = new THREE.Texture(img);
-          tex.needsUpdate = true;
-          tex.userData = { dataUrl: ev.target.result };
+          const isDisc = (uploadTarget === 'disc');
+          const defaultTransform = { scale: 1, offsetX: 0, offsetY: 0, rotate: 0, fit: 'cover' };
+          const compCanvas = composeTextureCanvas(img, defaultTransform, isDisc);
+          const tex = new THREE.CanvasTexture(compCanvas);
+          tex.userData = { rawImage: img, dataUrl: ev.target.result, transform: defaultTransform };
+          
           const p = getSelectedProduct();
           p.textures[uploadTarget] = tex;
+          syncUploadBoxes();
           buildAll3DModels();
           if (currentView === 'die') renderDieCanvas();
           if (currentView === '2d') render2DCanvas();
@@ -1684,8 +1870,8 @@
         document.getElementById('mainStage').style.background = 'transparent';
         groundMesh.visible = shadowsEnabled;
       } else {
-        renderer.setClearColor(0x0f0f10, 1);
-        document.getElementById('mainStage').style.background = '#0f0f10';
+        renderer.setClearColor(0x09090a, 1);
+        document.getElementById('mainStage').style.background = '#09090a';
         groundMesh.visible = shadowsEnabled;
       }
       if (currentView === '2d') render2DCanvas();
@@ -1755,7 +1941,7 @@
       if (currentView === '2d') render2DCanvas();
     }
 
-    // --- 高解析 1:1 精確居中與真實透明 PNG 輸出 ---
+    // --- 高解析 1:1 視口幾何裁切匯出引擎 ---
     function executeExport() {
       const ratio = parseFloat(document.getElementById('exportRatio').value);
       const format = document.getElementById('exportFormat').value;
@@ -1774,19 +1960,12 @@
         const rect = guideBox.getBoundingClientRect();
         const stageRect = stage.getBoundingClientRect();
 
-        // 備份
         const origAspect = camera.aspect;
         const origFov = camera.fov;
         const origPos = camera.position.clone();
         const origTarget = controls.target.clone();
 
-        // 計算裁切框在當前畫面中的範圍比例
-        const cropX = (rect.left - stageRect.left) / stageRect.width;
-        const cropY = (rect.top - stageRect.top) / stageRect.height;
-        const cropW = rect.width / stageRect.width;
-        const cropH = rect.height / stageRect.height;
-
-        // 設定相機對齊裁切框中心
+        // 鎖定相機投影精確匹配導引虛線框
         camera.setViewOffset(
           stageRect.width, stageRect.height,
           rect.left - stageRect.left, rect.top - stageRect.top,
@@ -1796,7 +1975,6 @@
 
         renderer.setSize(outW, outH);
 
-        // 若為透明，隱藏實體地面以保留乾淨透明 Alpha 通道
         if (isTransparent) {
           groundMesh.visible = false;
           renderer.setClearColor(0x000000, 0);
@@ -1805,7 +1983,7 @@
         renderer.render(scene, camera);
         link.href = renderer.domElement.toDataURL(isPng ? 'image/png' : 'image/jpeg', 0.95);
 
-        // 還原
+        // 還原視野
         camera.clearViewOffset();
         camera.aspect = origAspect;
         camera.fov = origFov;
@@ -1815,7 +1993,7 @@
 
         renderer.setSize(stageRect.width, stageRect.height);
         groundMesh.visible = shadowsEnabled && currentBgMode !== 'transparent';
-        renderer.setClearColor(currentBgMode === 'transparent' ? 0x000000 : (currentBgMode === 'pure_white' ? 0xffffff : 0x0f0f10), currentBgMode === 'transparent' ? 0 : 1);
+        renderer.setClearColor(currentBgMode === 'transparent' ? 0x000000 : (currentBgMode === 'pure_white' ? 0xffffff : 0x09090a), currentBgMode === 'transparent' ? 0 : 1);
       } else if (currentView === 'die') {
         link.href = document.getElementById('canvasDie').toDataURL(isPng ? 'image/png' : 'image/jpeg', 0.95);
       } else {
