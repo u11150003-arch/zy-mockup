@@ -31,7 +31,6 @@
       font-family: var(--sans);
       width: 100%;
       height: 100%;
-      height: 100dvh;
       overflow: hidden;
       -webkit-font-smoothing: antialiased;
     }
@@ -80,7 +79,7 @@
     }
     .top-tab.active { background: #fff; color: #111; font-weight: 600; }
 
-    /* 佈局容器 */
+    /* 桌機版佈局 */
     .app-container {
       display: flex;
       width: 100%;
@@ -270,9 +269,10 @@
       display: none;
     }
 
+    /* 尺寸虛線預覽框 */
     #exportGuideBox {
       position: absolute;
-      border: 2px dashed rgba(229, 115, 115, 0.9);
+      border: 2px dashed rgba(229, 115, 115, 0.95);
       box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.65);
       pointer-events: none;
       display: none;
@@ -288,6 +288,7 @@
       font-weight: 600;
       padding: 2px 8px;
       border-radius: 4px;
+      white-space: nowrap;
     }
 
     .bottom-bar {
@@ -341,52 +342,52 @@
       margin-bottom: 12px;
     }
 
-    /* RWD 手機與桌機自適應 */
+    /* ==========================================
+       手機版排版：參考 Proofroom 結構
+       最上方為產品畫面，往下滾動為設定
+       ========================================== */
     @media (max-width: 900px) {
-      body { overflow: hidden; }
-      .app-container { flex-direction: column; }
-      header {
-        position: relative;
+      html, body {
+        overflow-y: auto !important;
+        height: auto !important;
+      }
+      .app-container {
+        flex-direction: column;
         height: auto;
-        padding: 8px 14px;
-        background: var(--panel);
+      }
+      header {
+        position: sticky;
+        top: 0;
+        background: rgba(14, 15, 16, 0.95);
+        backdrop-filter: blur(10px);
         border-bottom: 1px solid var(--line);
         pointer-events: auto;
-        display: flex;
-        flex-wrap: nowrap;
-        align-items: center;
-        gap: 8px;
+        padding: 8px 14px;
+        height: 48px;
       }
-      .brand-title { font-size: 13px; white-space: nowrap; }
-      .top-center-tabs { margin-left: auto; padding: 2px; }
-      .top-tab { padding: 4px 10px; font-size: 11px; }
+      .brand-title { font-size: 13px; }
+      .top-center-tabs { margin-left: auto; }
+      .top-tab { padding: 4px 12px; font-size: 11px; }
 
-      /* 手機上舞台：固定高度區域 */
+      /* 1. 最上面是產品 3D 視圖 */
       main {
         width: 100%;
-        height: 42vh;
-        min-height: 240px;
+        height: 52vh;
+        min-height: 320px;
         flex: none;
-        position: relative;
+        order: 1;
       }
 
-      /* 手機下控制台：可滾動區域 */
-      aside {
-        width: 100%;
-        flex: 1;
-        height: auto;
-        padding-top: 0;
-        border-right: none;
-        border-top: 1px solid var(--line);
-        min-height: 0;
-      }
-
+      /* 控制視角與滑桿浮動於 3D 視圖下方 */
       .bottom-bar {
         bottom: 8px;
-        padding: 4px 10px;
+        left: 8px;
+        right: 8px;
+        max-width: none;
+        padding: 6px 12px;
         gap: 8px;
         overflow-x: auto;
-        border-radius: 14px;
+        border-radius: 12px;
         justify-content: flex-start;
       }
       .bottom-bar::-webkit-scrollbar { display: none; }
@@ -396,9 +397,29 @@
         padding-left: 8px;
         gap: 6px;
       }
-      .interact-row input[type="range"] { width: 70px; }
-      .panel-scroll { padding: 14px; gap: 12px; }
-      .form-row input[type="range"] { width: 110px; }
+      .interact-row input[type="range"] { width: 75px; }
+
+      /* 2. 往下滑是調整設定 */
+      aside {
+        width: 100%;
+        height: auto;
+        flex: none;
+        order: 2;
+        padding-top: 0;
+        border-right: none;
+        border-top: 1px solid var(--line);
+      }
+      .step-tabs {
+        position: sticky;
+        top: 48px;
+        z-index: 15;
+        background: var(--panel);
+      }
+      .panel-scroll {
+        overflow: visible;
+        height: auto;
+        padding: 16px;
+      }
     }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -600,8 +621,9 @@
       <canvas id="canvas2d"></canvas>
       <canvas id="canvasDie"></canvas>
       
+      <!-- 尺寸預覽虛線框 -->
       <div id="exportGuideBox">
-        <div id="exportGuideTag">1:1 匯出範圍預覽</div>
+        <div id="exportGuideTag">1:1 正方形範圍</div>
       </div>
 
       <div class="bottom-bar" id="bottomBar">
@@ -799,7 +821,7 @@
     }
 
     // ==========================================
-    // 2. 3D 渲染系統 (Proofroom 物理引擎管線)
+    // 2. 3D 渲染系統 (修正地面陰影角度)
     // ==========================================
     let scene, camera, renderer, controls, studioRoot, groundMesh;
     let keyLight, fillLight, rimLight, pmremGenerator;
@@ -834,25 +856,27 @@
       controls.panSpeed = 1.2;
       controls.maxPolarAngle = Math.PI / 2 + 0.02;
 
-      keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
-      keyLight.position.set(5, 10, 5);
+      // 修正光源角度：由斜上方均勻投射，消除背後不自然拉長三角尖陰影
+      keyLight = new THREE.DirectionalLight(0xffffff, 2.0);
+      keyLight.position.set(4, 12, 6);
       keyLight.castShadow = true;
       keyLight.shadow.mapSize.set(2048, 2048);
-      keyLight.shadow.bias = -0.0002;
+      keyLight.shadow.bias = -0.0001;
+      keyLight.shadow.radius = 4;
       scene.add(keyLight);
 
       fillLight = new THREE.DirectionalLight(0xdbe6ff, 1.2);
-      fillLight.position.set(-6, 4, -2);
+      fillLight.position.set(-6, 8, 4);
       scene.add(fillLight);
 
-      rimLight = new THREE.DirectionalLight(0xffffff, 1.5);
-      rimLight.position.set(0, 6, -6);
+      rimLight = new THREE.DirectionalLight(0xffffff, 1.0);
+      rimLight.position.set(0, 10, -5);
       scene.add(rimLight);
 
-      scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+      scene.add(new THREE.AmbientLight(0xffffff, 0.45));
 
       const gGeo = new THREE.PlaneGeometry(80, 80);
-      const gMat = new THREE.ShadowMaterial({ opacity: 0.45 });
+      const gMat = new THREE.ShadowMaterial({ opacity: 0.35 });
       groundMesh = new THREE.Mesh(gGeo, gMat);
       groundMesh.rotation.x = -Math.PI / 2;
       groundMesh.position.y = 0;
@@ -958,7 +982,7 @@
           jacket.add(disc);
         }
         else if (p.type === 'cd_jewel') {
-          // CD 寶麗盒：修正為實體不透明紙卡 + 透明壓克力外殼
+          // CD 寶麗盒：透明硬殼 + 不透明實體封底背卡與歌詞本
           const baseGroup = new THREE.Group();
           baseGroup.position.y = h / 2;
           const acrylMat = new THREE.MeshPhysicalMaterial({ transmission: 0.96, opacity: 1, transparent: true, roughness: 0.04, ior: 1.5, thickness: 0.05 });
@@ -968,7 +992,7 @@
           bottomCase.position.z = -spine * 0.25;
           baseGroup.add(bottomCase);
 
-          // 封底紙卡 Back Inlay (不透明實體厚度，封底絕不透光)
+          // 封底紙卡 Back Inlay (不透明實體，封底不透光)
           const backInlay = new THREE.Mesh(new THREE.BoxGeometry(w * 0.98, h * 0.98, 0.005), backMat);
           backInlay.position.z = -spine * 0.22;
           baseGroup.add(backInlay);
@@ -995,6 +1019,7 @@
           cdMesh.castShadow = shadowsEnabled;
           baseGroup.add(cdMesh);
 
+          // 左鉸鏈水平轉動
           const hingeGroup = new THREE.Group();
           hingeGroup.position.set(-w / 2, 0, spine * 0.25);
 
@@ -1012,7 +1037,7 @@
           itemRoot.add(baseGroup);
         }
         else if (p.type === 'cd_digipak') {
-          // CD Digipak：左封面圍繞左側 Y 軸自然向左水平翻開
+          // CD Digipak：左封面水平翻開
           const digiGroup = new THREE.Group();
           digiGroup.position.y = h / 2;
 
@@ -1498,8 +1523,39 @@
     window.addEventListener('mouseup', () => drag2DItem = null);
 
     // ==========================================
-    // 4. UI 介面與按鈕互動 (完全保留原版)
+    // 4. UI 介面與按鈕互動 (修復虛線框)
     // ==========================================
+    function updateExportGuideBox() {
+      const guideBox = document.getElementById('exportGuideBox');
+      if (currentView === 'die') { guideBox.style.display = 'none'; return; }
+
+      const stage = document.getElementById('mainStage');
+      const ratio = parseFloat(document.getElementById('exportRatio').value);
+      const stageW = stage.clientWidth;
+      const stageH = stage.clientHeight;
+
+      let boxW, boxH;
+      if (stageW / stageH > ratio) {
+        boxH = stageH * 0.85; boxW = boxH * ratio;
+      } else {
+        boxW = stageW * 0.85; boxH = boxW / ratio;
+      }
+
+      guideBox.style.width = Math.round(boxW) + 'px';
+      guideBox.style.height = Math.round(boxH) + 'px';
+      guideBox.style.left = Math.round((stageW - boxW) / 2) + 'px';
+      guideBox.style.top = Math.round((stageH - boxH) / 2) + 'px';
+      
+      // 當在輸出步驟時自動開啟虛線框
+      const step4 = document.getElementById('step-4');
+      if (step4 && step4.style.display !== 'none') {
+        guideBox.style.display = 'block';
+      }
+
+      const tagMap = { '1': '1:1 正方形範圍', '0.8': '4:5 直式貼文範圍', '0.5625': '9:16 限動範圍', '1.777': '16:9 橫幅範圍' };
+      document.getElementById('exportGuideTag').textContent = tagMap[document.getElementById('exportRatio').value] || '輸出範圍';
+    }
+
     function unlockProjectManager() {
       const pwd = document.getElementById('projPwd').value;
       if (pwd === '0411') {
@@ -1838,8 +1894,11 @@
     function setStep(idx) {
       document.querySelectorAll('.step-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
       document.querySelectorAll('.step-content').forEach((p, i) => p.style.display = i === idx ? 'block' : 'none');
-      if (idx === 4) updateExportGuideBox();
-      else document.getElementById('exportGuideBox').style.display = 'none';
+      if (idx === 4) {
+        updateExportGuideBox();
+      } else {
+        document.getElementById('exportGuideBox').style.display = 'none';
+      }
     }
 
     function updateCustomBg(color) {
@@ -1874,23 +1933,23 @@
 
     function applyLightPreset(type) {
       if (type === 'studio') {
-        keyLight.position.set(5, 10, 5);
+        keyLight.position.set(4, 12, 6);
         keyLight.color.setHex(0xffffff);
-        keyLight.intensity = 2.2;
-        fillLight.position.set(-6, 4, -2);
+        keyLight.intensity = 2.0;
+        fillLight.position.set(-6, 8, 4);
         fillLight.intensity = 1.2;
-        rimLight.intensity = 1.5;
+        rimLight.intensity = 1.0;
       } else if (type === 'rim') {
-        keyLight.position.set(2, 4, -7);
+        keyLight.position.set(2, 6, -7);
         keyLight.color.setHex(0xdce6ff);
-        keyLight.intensity = 2.8;
-        fillLight.position.set(7, 2, 3);
+        keyLight.intensity = 2.5;
+        fillLight.position.set(7, 4, 3);
         fillLight.intensity = 0.5;
-        rimLight.intensity = 2.5;
+        rimLight.intensity = 2.2;
       } else if (type === 'dramatic') {
-        keyLight.position.set(0, 10, 1);
+        keyLight.position.set(0, 14, 2);
         keyLight.color.setHex(0xffffff);
-        keyLight.intensity = 3.5;
+        keyLight.intensity = 3.2;
         fillLight.intensity = 0.2;
         rimLight.intensity = 0.4;
       }
@@ -2017,7 +2076,7 @@
       link.click();
     }
 
-    // 自適應視窗縮放處理
+    // 自適應螢幕大小處理
     function handleResize() {
       const c = document.getElementById('viewport3d');
       if (c && renderer && camera) {
