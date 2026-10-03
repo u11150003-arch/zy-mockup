@@ -25,16 +25,18 @@
       --sans: "Montserrat", "Noto Sans TC", sans-serif;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-    body {
+    html, body {
       background: var(--bg);
       color: var(--ink);
       font-family: var(--sans);
-      display: flex;
-      height: 100vh;
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
       overflow: hidden;
       -webkit-font-smoothing: antialiased;
     }
 
+    /* 頂部導覽列 */
     header {
       position: absolute;
       top: 0; left: 0; right: 0;
@@ -47,7 +49,7 @@
       pointer-events: none;
     }
     .brand-title {
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 700;
       letter-spacing: 1.5px;
       color: #fff;
@@ -56,7 +58,6 @@
       gap: 10px;
       pointer-events: auto;
     }
-    .brand-title span { font-size: 11px; font-weight: normal; color: var(--muted); }
     .top-center-tabs {
       display: flex;
       background: rgba(19, 19, 20, 0.85);
@@ -79,22 +80,32 @@
     }
     .top-tab.active { background: #fff; color: #111; font-weight: 600; }
 
+    /* 佈局容器 */
+    .app-container {
+      display: flex;
+      width: 100%;
+      height: 100%;
+    }
+
     aside {
       width: 390px;
-      height: 100vh;
+      height: 100%;
       background: var(--panel);
       border-right: 1px solid var(--line);
       display: flex;
       flex-direction: column;
       z-index: 20;
       padding-top: 52px;
+      flex-shrink: 0;
     }
     .step-tabs {
       display: flex;
       overflow-x: auto;
       border-bottom: 1px solid var(--line);
       background: rgba(0,0,0,0.3);
+      flex-shrink: 0;
     }
+    .step-tabs::-webkit-scrollbar { display: none; }
     .step-btn {
       flex: 1;
       min-width: 65px;
@@ -106,6 +117,7 @@
       font-size: 11px;
       cursor: pointer;
       text-align: center;
+      white-space: nowrap;
     }
     .step-btn.active { color: #fff; font-weight: 600; border-color: var(--accent); }
     
@@ -213,9 +225,7 @@
       font-size: 11px;
       color: var(--muted);
     }
-    .tex-row input[type="range"] {
-      width: 110px;
-    }
+    .tex-row input[type="range"] { width: 110px; }
 
     .product-list-chips {
       display: flex;
@@ -243,6 +253,7 @@
 
     main {
       flex: 1;
+      height: 100%;
       position: relative;
       background: var(--bg);
       display: flex;
@@ -292,6 +303,7 @@
       backdrop-filter: blur(12px);
       z-index: 30;
       font-size: 12px;
+      max-width: calc(100% - 30px);
     }
     .angle-btns { display: flex; gap: 4px; }
     .angle-btn {
@@ -302,9 +314,10 @@
       border-radius: 999px;
       font-size: 11px;
       cursor: pointer;
+      white-space: nowrap;
     }
     .angle-btn:hover, .angle-btn.active { color: #fff; background: var(--raised); }
-    .interact-row { display: flex; align-items: center; gap: 8px; border-left: 1px solid var(--line-2); padding-left: 14px; }
+    .interact-row { display: flex; align-items: center; gap: 8px; border-left: 1px solid var(--line-2); padding-left: 14px; white-space: nowrap; }
 
     .primary-btn {
       width: 100%;
@@ -327,6 +340,66 @@
       border-radius: 8px;
       margin-bottom: 12px;
     }
+
+    /* RWD 手機與桌機自適應 */
+    @media (max-width: 900px) {
+      body { overflow: hidden; }
+      .app-container { flex-direction: column; }
+      header {
+        position: relative;
+        height: auto;
+        padding: 8px 14px;
+        background: var(--panel);
+        border-bottom: 1px solid var(--line);
+        pointer-events: auto;
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: 8px;
+      }
+      .brand-title { font-size: 13px; white-space: nowrap; }
+      .top-center-tabs { margin-left: auto; padding: 2px; }
+      .top-tab { padding: 4px 10px; font-size: 11px; }
+
+      /* 手機上舞台：固定高度區域 */
+      main {
+        width: 100%;
+        height: 42vh;
+        min-height: 240px;
+        flex: none;
+        position: relative;
+      }
+
+      /* 手機下控制台：可滾動區域 */
+      aside {
+        width: 100%;
+        flex: 1;
+        height: auto;
+        padding-top: 0;
+        border-right: none;
+        border-top: 1px solid var(--line);
+        min-height: 0;
+      }
+
+      .bottom-bar {
+        bottom: 8px;
+        padding: 4px 10px;
+        gap: 8px;
+        overflow-x: auto;
+        border-radius: 14px;
+        justify-content: flex-start;
+      }
+      .bottom-bar::-webkit-scrollbar { display: none; }
+      .angle-btns { flex-shrink: 0; }
+      .interact-row {
+        flex-shrink: 0;
+        padding-left: 8px;
+        gap: 6px;
+      }
+      .interact-row input[type="range"] { width: 70px; }
+      .panel-scroll { padding: 14px; gap: 12px; }
+      .form-row input[type="range"] { width: 110px; }
+    }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -334,221 +407,220 @@
 <body>
 
   <header>
-    <div class="brand-title">
-      zy產品照打樣室 <span>· Proofroom 物理打樣管線</span>
-    </div>
+    <div class="brand-title">zy產品照打樣室</div>
     <div class="top-center-tabs">
       <button class="top-tab active" onclick="setViewMode('3d')">3D 預覽</button>
       <button class="top-tab" onclick="setViewMode('die')">展開圖 (刀模)</button>
       <button class="top-tab" onclick="setViewMode('2d')">2D 平面打樣</button>
     </div>
-    <div style="width: 120px;"></div>
   </header>
 
-  <aside>
-    <div class="step-tabs">
-      <button class="step-btn active" onclick="setStep(0)">01 品項尺寸</button>
-      <button class="step-btn" onclick="setStep(1)">02 紙材工藝</button>
-      <button class="step-btn" onclick="setStep(2)">03 部件貼圖</button>
-      <button class="step-btn" onclick="setStep(3)">04 光線場景</button>
-      <button class="step-btn" onclick="setStep(4)">05 輸出圖片</button>
-    </div>
+  <div class="app-container">
+    <aside>
+      <div class="step-tabs">
+        <button class="step-btn active" onclick="setStep(0)">01 品項尺寸</button>
+        <button class="step-btn" onclick="setStep(1)">02 紙材工藝</button>
+        <button class="step-btn" onclick="setStep(2)">03 部件貼圖</button>
+        <button class="step-btn" onclick="setStep(3)">04 光線場景</button>
+        <button class="step-btn" onclick="setStep(4)">05 輸出圖片</button>
+      </div>
 
-    <div class="panel-scroll" id="stepPanels">
-      <!-- 步驟 1: 品項與尺寸 + 專案保存區 (密碼 0411) -->
-      <div id="step-0" class="step-content">
-        <div class="project-auth-box">
-          <div class="sec-h" style="margin-bottom:6px;">
-            <span>🔐 專案保存區</span>
-          </div>
-          <div class="form-row" id="authRow">
-            <input type="password" id="projPwd" placeholder="請輸入授權密碼" style="width:120px; text-align:left;">
-            <button class="pill-btn" onclick="unlockProjectManager()">解鎖管理</button>
-          </div>
-          <div id="projControls" style="display:none; gap:6px; flex-direction:column; margin-top:8px;">
-            <div style="display:flex; gap:6px;">
-              <button class="pill-btn" style="flex:1;" onclick="saveCurrentProject()">💾 保存當前配置</button>
-              <button class="pill-btn" style="flex:1;" onclick="loadSavedProject()">📂 讀取已存配置</button>
+      <div class="panel-scroll" id="stepPanels">
+        <!-- 步驟 1: 品項與尺寸 + 專案保存區 (密碼 0411) -->
+        <div id="step-0" class="step-content">
+          <div class="project-auth-box">
+            <div class="sec-h" style="margin-bottom:6px;">
+              <span>🔐 專案保存區</span>
             </div>
-            <p id="projStatus" style="font-size:10px; color:var(--accent); text-align:center;"></p>
+            <div class="form-row" id="authRow">
+              <input type="password" id="projPwd" placeholder="請輸入授權密碼" style="width:120px; text-align:left;">
+              <button class="pill-btn" onclick="unlockProjectManager()">解鎖管理</button>
+            </div>
+            <div id="projControls" style="display:none; gap:6px; flex-direction:column; margin-top:8px;">
+              <div style="display:flex; gap:6px;">
+                <button class="pill-btn" style="flex:1;" onclick="saveCurrentProject()">💾 保存當前配置</button>
+                <button class="pill-btn" style="flex:1;" onclick="loadSavedProject()">📂 讀取已存配置</button>
+              </div>
+              <p id="projStatus" style="font-size:10px; color:var(--accent); text-align:center;"></p>
+            </div>
           </div>
-        </div>
 
-        <div class="sec-h">
-          <span>畫面上的產品列表</span>
-          <span style="font-size:10px; color:var(--accent);">點選切換／✕ 刪除</span>
-        </div>
-        <div class="product-list-chips" id="productChips"></div>
+          <div class="sec-h">
+            <span>畫面上的產品列表</span>
+            <span style="font-size:10px; color:var(--accent);">點選切換／✕ 刪除</span>
+          </div>
+          <div class="product-list-chips" id="productChips"></div>
 
-        <div class="sec-h">新增實體產品至畫面</div>
-        <div class="grid-2" style="margin-bottom: 14px;">
-          <button class="pill-btn" onclick="addNewProduct('vinyl')">＋ 黑膠 12" 封套</button>
-          <button class="pill-btn" onclick="addNewProduct('cd_jewel')">＋ CD 寶麗盒 (塑膠)</button>
-          <button class="pill-btn" onclick="addNewProduct('cd_digipak')">＋ CD Digipak (紙質)</button>
-          <button class="pill-btn" onclick="addNewProduct('calendar_desk')">＋ 桌曆 (三角上翻)</button>
-          <button class="pill-btn" onclick="addNewProduct('notebook')">＋ 筆記本 (多頁翻動)</button>
-          <button class="pill-btn" onclick="addNewProduct('photocard')">＋ 滿版照片小卡</button>
-          <button class="pill-btn" onclick="addNewProduct('postcard')">＋ 明信片 / 單卡</button>
-        </div>
+          <div class="sec-h">新增實體產品至畫面</div>
+          <div class="grid-2" style="margin-bottom: 14px;">
+            <button class="pill-btn" onclick="addNewProduct('vinyl')">＋ 黑膠 12" 封套</button>
+            <button class="pill-btn" onclick="addNewProduct('cd_jewel')">＋ CD 寶麗盒 (塑膠)</button>
+            <button class="pill-btn" onclick="addNewProduct('cd_digipak')">＋ CD Digipak (紙質)</button>
+            <button class="pill-btn" onclick="addNewProduct('calendar_desk')">＋ 桌曆 (三角上翻)</button>
+            <button class="pill-btn" onclick="addNewProduct('notebook')">＋ 筆記本 (多頁翻動)</button>
+            <button class="pill-btn" onclick="addNewProduct('photocard')">＋ 滿版照片小卡</button>
+            <button class="pill-btn" onclick="addNewProduct('postcard')">＋ 明信片 / 單卡</button>
+          </div>
 
-        <div class="sec-h">所選品項外觀尺寸 (MM)</div>
-        <div class="form-row">
-          <label>寬度 (W)</label>
-          <input type="number" id="dimW" oninput="applyCurrentSettings()">
-        </div>
-        <div class="form-row">
-          <label>高度 (H)</label>
-          <input type="number" id="dimH" oninput="applyCurrentSettings()">
-        </div>
-        <div class="form-row" id="rowSpine">
-          <label>厚度 / 書背 (Spine)</label>
-          <input type="number" id="dimSpine" oninput="applyCurrentSettings()">
-        </div>
-        <div class="form-row" id="rowPages">
-          <label>內頁總頁數 (Pages)</label>
-          <input type="number" id="dimPages" min="1" max="24" value="5" oninput="onPagesCountChange()">
-        </div>
-        <div class="form-row" id="rowRadius">
-          <label>圓角半徑 (Radius)</label>
-          <input type="number" id="dimRadius" oninput="applyCurrentSettings()">
-        </div>
+          <div class="sec-h">所選品項外觀尺寸 (MM)</div>
+          <div class="form-row">
+            <label>寬度 (W)</label>
+            <input type="number" id="dimW" oninput="applyCurrentSettings()">
+          </div>
+          <div class="form-row">
+            <label>高度 (H)</label>
+            <input type="number" id="dimH" oninput="applyCurrentSettings()">
+          </div>
+          <div class="form-row" id="rowSpine">
+            <label>厚度 / 書背 (Spine)</label>
+            <input type="number" id="dimSpine" oninput="applyCurrentSettings()">
+          </div>
+          <div class="form-row" id="rowPages">
+            <label>內頁總頁數 (Pages)</label>
+            <input type="number" id="dimPages" min="1" max="24" value="5" oninput="onPagesCountChange()">
+          </div>
+          <div class="form-row" id="rowRadius">
+            <label>圓角半徑 (Radius)</label>
+            <input type="number" id="dimRadius" oninput="applyCurrentSettings()">
+          </div>
 
-        <div class="sec-h" style="margin-top:14px;">展開圖刀模出血設定</div>
-        <div class="form-row">
-          <label>出血尺寸</label>
-          <div style="display:flex; gap:4px; align-items:center;">
-            <input type="number" id="bleedVal" value="3" style="width:55px;" oninput="applyCurrentSettings()">
-            <select id="bleedUnit" style="width:55px;" onchange="applyCurrentSettings()">
-              <option value="mm">mm</option>
-              <option value="cm">cm</option>
+          <div class="sec-h" style="margin-top:14px;">展開圖刀模出血設定</div>
+          <div class="form-row">
+            <label>出血尺寸</label>
+            <div style="display:flex; gap:4px; align-items:center;">
+              <input type="number" id="bleedVal" value="3" style="width:55px;" oninput="applyCurrentSettings()">
+              <select id="bleedUnit" style="width:55px;" onchange="applyCurrentSettings()">
+                <option value="mm">mm</option>
+                <option value="cm">cm</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <label>出血線位置</label>
+            <select id="bleedPos" onchange="applyCurrentSettings()">
+              <option value="outside">產品外部 (外擴出血)</option>
+              <option value="inside">產品內部 (內縮安全線)</option>
             </select>
           </div>
         </div>
-        <div class="form-row">
-          <label>出血線位置</label>
-          <select id="bleedPos" onchange="applyCurrentSettings()">
-            <option value="outside">產品外部 (外擴出血)</option>
-            <option value="inside">產品內部 (內縮安全線)</option>
-          </select>
+
+        <!-- 步驟 2: 紙材與工藝 -->
+        <div id="step-1" class="step-content" style="display:none;">
+          <div class="sec-h">材質紋理預設</div>
+          <div class="grid-3" style="margin-bottom: 14px;">
+            <button class="pill-btn active" id="btn_mat_coated" onclick="setPaper('coated')">銅版紙</button>
+            <button class="pill-btn" id="btn_mat_matte" onclick="setPaper('matte')">雪銅紙</button>
+            <button class="pill-btn" id="btn_mat_kraft" onclick="setPaper('kraft')">牛皮紙</button>
+            <button class="pill-btn" id="btn_mat_holotech" onclick="setPaper('holotech')">雷射金屬</button>
+            <button class="pill-btn" id="btn_mat_pearl" onclick="setPaper('pearl')">珠光紙</button>
+            <button class="pill-btn" id="btn_mat_clear" onclick="setPaper('clear')">透明壓克力</button>
+          </div>
+          <div class="sec-h">微調參數</div>
+          <div class="form-row">
+            <label>金屬反射光澤</label>
+            <input type="range" id="metalness" min="0" max="1" step="0.05" oninput="applyCurrentSettings()">
+          </div>
+          <div class="form-row">
+            <label>表面消光粗糙度</label>
+            <input type="range" id="roughness" min="0.05" max="1" step="0.05" oninput="applyCurrentSettings()">
+          </div>
         </div>
+
+        <!-- 步驟 3: 部件貼圖 -->
+        <div id="step-2" class="step-content" style="display:none;">
+          <div class="sec-h">獨立部件圖稿替換與比例調整</div>
+          <div id="uploadBoxContainer"></div>
+          <input type="file" id="fileIn" style="display:none;" accept="image/*">
+          <p style="font-size: 11px; color: var(--muted); margin-top: 8px;">* 支援高解析 PNG/JPG。微調後 2D 與 3D 顯示保證等比一致。</p>
+        </div>
+
+        <!-- 步驟 4: 光線與場景 -->
+        <div id="step-3" class="step-content" style="display:none;">
+          <div class="sec-h">攝影棚燈光氛圍</div>
+          <div class="form-row">
+            <label>燈光風格預設</label>
+            <select id="lightPreset" onchange="applyLightPreset(this.value)">
+              <option value="studio">商業柔光 (三點均勻攝影棚)</option>
+              <option value="rim">輪廓側光 (高對比反光邊緣線)</option>
+              <option value="dramatic">戲劇高反差 (頂光強烈聚焦投影)</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>光源旋轉角度</label>
+            <input type="range" id="lightAngle" min="0" max="360" value="45" oninput="updateLighting()">
+          </div>
+          <div class="form-row">
+            <label>光源強度</label>
+            <input type="range" id="lightIntensity" min="0.2" max="3.5" step="0.1" value="2.0" oninput="updateLighting()">
+          </div>
+
+          <div class="sec-h" style="margin-top: 14px;">背景與展台底色</div>
+          <div class="grid-2">
+            <button class="pill-btn active" id="btn_bg_studio" onclick="setBgPreset('studio')">沉浸深灰 (Studio)</button>
+            <button class="pill-btn" id="btn_bg_pure_white" onclick="setBgPreset('pure_white')">無縫純白 (電商)</button>
+            <button class="pill-btn" id="btn_bg_transparent" onclick="setBgPreset('transparent')">透明背景 (PNG 陰影)</button>
+            <button class="pill-btn" id="btn_no_shadow" onclick="toggleShadows()">無陰影模式 (切換)</button>
+          </div>
+
+          <div class="form-row" style="margin-top:10px;">
+            <label>自訂展台底色</label>
+            <input type="color" id="customBgColor" value="#09090a" oninput="updateCustomBg(this.value)">
+          </div>
+        </div>
+
+        <!-- 步驟 5: 輸出圖片 -->
+        <div id="step-4" class="step-content" style="display:none;">
+          <div class="sec-h">匯出規格與預覽</div>
+          <div class="form-row">
+            <label>版面規格比例</label>
+            <select id="exportRatio" onchange="updateExportGuideBox()">
+              <option value="1">1:1 正方形 (2048 × 2048 px)</option>
+              <option value="0.8">4:5 直式貼文 (1600 × 2000 px)</option>
+              <option value="0.5625">9:16 限時動態 (1080 × 1920 px)</option>
+              <option value="1.777">16:9 寬螢幕橫幅 (1920 × 1080 px)</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>匯出格式</label>
+            <select id="exportFormat">
+              <option value="png">PNG (透明/保留陰影)</option>
+              <option value="jpeg">高品質 JPG</option>
+            </select>
+          </div>
+          <p style="font-size: 11px; color: var(--muted); margin: 6px 0 12px;">* 虛線框標記了目前輸出畫面範圍，已自動居中產品。可用手掌工具調整取景。</p>
+          <button class="primary-btn" onclick="executeExport()">立即下載打樣成品圖</button>
+        </div>
+
+        <button class="primary-btn" style="background:#2f5d62; margin-top: auto;" onclick="confirmChanges()">✔ 儲存並確認更動</button>
+      </div>
+    </aside>
+
+    <main id="mainStage">
+      <div id="viewport3d"></div>
+      <canvas id="canvas2d"></canvas>
+      <canvas id="canvasDie"></canvas>
+      
+      <div id="exportGuideBox">
+        <div id="exportGuideTag">1:1 匯出範圍預覽</div>
       </div>
 
-      <!-- 步驟 2: 紙材與工藝 -->
-      <div id="step-1" class="step-content" style="display:none;">
-        <div class="sec-h">材質紋理預設</div>
-        <div class="grid-3" style="margin-bottom: 14px;">
-          <button class="pill-btn active" id="btn_mat_coated" onclick="setPaper('coated')">銅版紙</button>
-          <button class="pill-btn" id="btn_mat_matte" onclick="setPaper('matte')">雪銅紙</button>
-          <button class="pill-btn" id="btn_mat_kraft" onclick="setPaper('kraft')">牛皮紙</button>
-          <button class="pill-btn" id="btn_mat_holotech" onclick="setPaper('holotech')">雷射金屬</button>
-          <button class="pill-btn" id="btn_mat_pearl" onclick="setPaper('pearl')">珠光紙</button>
-          <button class="pill-btn" id="btn_mat_clear" onclick="setPaper('clear')">透明壓克力</button>
+      <div class="bottom-bar" id="bottomBar">
+        <div class="angle-btns">
+          <button class="angle-btn" id="btnPan" onclick="togglePanMode()">✋ 平移畫面</button>
+          <button class="angle-btn" onclick="setCameraAngle('top', this)">俯視</button>
+          <button class="angle-btn active" onclick="setCameraAngle('iso', this)">斜 45°</button>
+          <button class="angle-btn" onclick="setCameraAngle('flat', this)">平放地面</button>
+          <button class="angle-btn" onclick="setCameraAngle('low', this)">低角度</button>
+          <button class="angle-btn" onclick="setCameraAngle('side', this)">側面</button>
+          <button class="angle-btn" onclick="setCameraAngle('back', this)">翻面</button>
         </div>
-        <div class="sec-h">微調參數</div>
-        <div class="form-row">
-          <label>金屬反射光澤</label>
-          <input type="range" id="metalness" min="0" max="1" step="0.05" oninput="applyCurrentSettings()">
-        </div>
-        <div class="form-row">
-          <label>表面消光粗糙度</label>
-          <input type="range" id="roughness" min="0.05" max="1" step="0.05" oninput="applyCurrentSettings()">
+        <div class="interact-row">
+          <span id="openLabel">開闔 / 翻頁 / 抽出</span>
+          <input type="range" id="openSlider" min="0" max="1" step="0.005" value="0.25" oninput="onInteractChange(this.value)">
         </div>
       </div>
-
-      <!-- 步驟 3: 部件貼圖 -->
-      <div id="step-2" class="step-content" style="display:none;">
-        <div class="sec-h">獨立部件圖稿替換與比例調整</div>
-        <div id="uploadBoxContainer"></div>
-        <input type="file" id="fileIn" style="display:none;" accept="image/*">
-        <p style="font-size: 11px; color: var(--muted); margin-top: 8px;">* 支援高解析 PNG/JPG。微調後 2D 與 3D 顯示保證等比一致。</p>
-      </div>
-
-      <!-- 步驟 4: 光線與場景 -->
-      <div id="step-3" class="step-content" style="display:none;">
-        <div class="sec-h">攝影棚燈光氛圍</div>
-        <div class="form-row">
-          <label>燈光風格預設</label>
-          <select id="lightPreset" onchange="applyLightPreset(this.value)">
-            <option value="studio">商業柔光 (三點均勻攝影棚)</option>
-            <option value="rim">輪廓側光 (高對比反光邊緣線)</option>
-            <option value="dramatic">戲劇高反差 (頂光強烈聚焦投影)</option>
-          </select>
-        </div>
-        <div class="form-row">
-          <label>光源旋轉角度</label>
-          <input type="range" id="lightAngle" min="0" max="360" value="45" oninput="updateLighting()">
-        </div>
-        <div class="form-row">
-          <label>光源強度</label>
-          <input type="range" id="lightIntensity" min="0.2" max="3.5" step="0.1" value="2.0" oninput="updateLighting()">
-        </div>
-
-        <div class="sec-h" style="margin-top: 14px;">背景與展台底色</div>
-        <div class="grid-2">
-          <button class="pill-btn active" id="btn_bg_studio" onclick="setBgPreset('studio')">沉浸深灰 (Studio)</button>
-          <button class="pill-btn" id="btn_bg_pure_white" onclick="setBgPreset('pure_white')">無縫純白 (電商)</button>
-          <button class="pill-btn" id="btn_bg_transparent" onclick="setBgPreset('transparent')">透明背景 (PNG 陰影)</button>
-          <button class="pill-btn" id="btn_no_shadow" onclick="toggleShadows()">無陰影模式 (切換)</button>
-        </div>
-
-        <div class="form-row" style="margin-top:10px;">
-          <label>自訂展台底色</label>
-          <input type="color" id="customBgColor" value="#09090a" oninput="updateCustomBg(this.value)">
-        </div>
-      </div>
-
-      <!-- 步驟 5: 輸出圖片 -->
-      <div id="step-4" class="step-content" style="display:none;">
-        <div class="sec-h">匯出規格與預覽</div>
-        <div class="form-row">
-          <label>版面規格比例</label>
-          <select id="exportRatio" onchange="updateExportGuideBox()">
-            <option value="1">1:1 正方形 (2048 × 2048 px)</option>
-            <option value="0.8">4:5 直式貼文 (1600 × 2000 px)</option>
-            <option value="0.5625">9:16 限時動態 (1080 × 1920 px)</option>
-            <option value="1.777">16:9 寬螢幕橫幅 (1920 × 1080 px)</option>
-          </select>
-        </div>
-        <div class="form-row">
-          <label>匯出格式</label>
-          <select id="exportFormat">
-            <option value="png">PNG (透明/保留陰影)</option>
-            <option value="jpeg">高品質 JPG</option>
-          </select>
-        </div>
-        <p style="font-size: 11px; color: var(--muted); margin: 6px 0 12px;">* 虛線框標記了目前輸出畫面範圍，已自動居中產品。可用手掌工具調整取景。</p>
-        <button class="primary-btn" onclick="executeExport()">立即下載打樣成品圖</button>
-      </div>
-
-      <button class="primary-btn" style="background:#2f5d62; margin-top: auto;" onclick="confirmChanges()">✔ 儲存並確認更動</button>
-    </div>
-  </aside>
-
-  <main id="mainStage">
-    <div id="viewport3d"></div>
-    <canvas id="canvas2d"></canvas>
-    <canvas id="canvasDie"></canvas>
-    
-    <div id="exportGuideBox">
-      <div id="exportGuideTag">1:1 匯出範圍預覽</div>
-    </div>
-
-    <div class="bottom-bar" id="bottomBar">
-      <div class="angle-btns">
-        <button class="angle-btn" id="btnPan" onclick="togglePanMode()">✋ 平移畫面</button>
-        <button class="angle-btn" onclick="setCameraAngle('top', this)">俯視</button>
-        <button class="angle-btn active" onclick="setCameraAngle('iso', this)">斜 45°</button>
-        <button class="angle-btn" onclick="setCameraAngle('flat', this)">平放地面</button>
-        <button class="angle-btn" onclick="setCameraAngle('low', this)">低角度</button>
-        <button class="angle-btn" onclick="setCameraAngle('side', this)">側面</button>
-        <button class="angle-btn" onclick="setCameraAngle('back', this)">翻面</button>
-      </div>
-      <div class="interact-row">
-        <span id="openLabel">開闔 / 翻頁 / 抽出</span>
-        <input type="range" id="openSlider" min="0" max="1" step="0.005" value="0.25" oninput="onInteractChange(this.value)">
-      </div>
-    </div>
-  </main>
+    </main>
+  </div>
 
   <script>
     // ==========================================
@@ -727,7 +799,7 @@
     }
 
     // ==========================================
-    // 2. 3D 渲染系統 (修復報錯 + Proofroom 物理光澤)
+    // 2. 3D 渲染系統 (Proofroom 物理引擎管線)
     // ==========================================
     let scene, camera, renderer, controls, studioRoot, groundMesh;
     let keyLight, fillLight, rimLight, pmremGenerator;
@@ -792,7 +864,7 @@
 
       calculateAutoX();
       buildAll3DModels();
-      setCameraAngle('iso'); // 不帶 event，安全無崩潰呼叫
+      setCameraAngle('iso');
       renderLoop();
     }
 
@@ -823,7 +895,6 @@
       scene.environment = renderTarget.texture;
     }
 
-    // 修復平移畫面響應：改寫滑鼠按鍵配置與指標狀態
     function togglePanMode() {
       isPanActive = !isPanActive;
       const btn = document.getElementById('btnPan');
@@ -887,7 +958,7 @@
           jacket.add(disc);
         }
         else if (p.type === 'cd_jewel') {
-          // 修復：CD 寶麗盒 - 外殼透明壓克力，背面與內頁封面均為不透明實體紙張
+          // CD 寶麗盒：修正為實體不透明紙卡 + 透明壓克力外殼
           const baseGroup = new THREE.Group();
           baseGroup.position.y = h / 2;
           const acrylMat = new THREE.MeshPhysicalMaterial({ transmission: 0.96, opacity: 1, transparent: true, roughness: 0.04, ior: 1.5, thickness: 0.05 });
@@ -924,7 +995,6 @@
           cdMesh.castShadow = shadowsEnabled;
           baseGroup.add(cdMesh);
 
-          // 左鉸鏈水平轉動
           const hingeGroup = new THREE.Group();
           hingeGroup.position.set(-w / 2, 0, spine * 0.25);
 
@@ -942,7 +1012,7 @@
           itemRoot.add(baseGroup);
         }
         else if (p.type === 'cd_digipak') {
-          // CD Digipak：左封面水平翻開
+          // CD Digipak：左封面圍繞左側 Y 軸自然向左水平翻開
           const digiGroup = new THREE.Group();
           digiGroup.position.y = h / 2;
 
@@ -1143,7 +1213,6 @@
       if (currentView === '2d') render2DCanvas();
     }
 
-    // 修復：安全切換視角，絕不直接讀取 window.event 避免拋出例外
     function setCameraAngle(angle, btnEl = null) {
       document.querySelectorAll('.angle-btn').forEach(b => {
         if (b.id !== 'btnPan') b.classList.remove('active');
@@ -1431,32 +1500,6 @@
     // ==========================================
     // 4. UI 介面與按鈕互動 (完全保留原版)
     // ==========================================
-    function updateExportGuideBox() {
-      const guideBox = document.getElementById('exportGuideBox');
-      if (currentView === 'die') { guideBox.style.display = 'none'; return; }
-
-      const stage = document.getElementById('mainStage');
-      const ratio = parseFloat(document.getElementById('exportRatio').value);
-      const stageW = stage.clientWidth;
-      const stageH = stage.clientHeight;
-
-      let boxW, boxH;
-      if (stageW / stageH > ratio) {
-        boxH = stageH * 0.85; boxW = boxH * ratio;
-      } else {
-        boxW = stageW * 0.85; boxH = boxW / ratio;
-      }
-
-      guideBox.style.width = boxW + 'px';
-      guideBox.style.height = boxH + 'px';
-      guideBox.style.left = (stageW - boxW) / 2 + 'px';
-      guideBox.style.top = (stageH - boxH) / 2 + 'px';
-      guideBox.style.display = 'block';
-
-      const tagMap = { '1': '1:1 正方形範圍', '0.8': '4:5 直式貼文範圍', '0.5625': '9:16 限動範圍', '1.777': '16:9 橫幅範圍' };
-      document.getElementById('exportGuideTag').textContent = tagMap[document.getElementById('exportRatio').value] || '輸出範圍';
-    }
-
     function unlockProjectManager() {
       const pwd = document.getElementById('projPwd').value;
       if (pwd === '0411') {
@@ -1782,9 +1825,10 @@
       document.getElementById('bottomBar').style.display = mode === 'die' ? 'none' : 'flex';
 
       if (mode === '3d') {
-        camera.aspect = document.getElementById('viewport3d').clientWidth / document.getElementById('viewport3d').clientHeight;
+        const vp = document.getElementById('viewport3d');
+        camera.aspect = vp.clientWidth / vp.clientHeight;
         camera.updateProjectionMatrix();
-        renderer.setSize(document.getElementById('viewport3d').clientWidth, document.getElementById('viewport3d').clientHeight);
+        renderer.setSize(vp.clientWidth, vp.clientHeight);
       }
       if (mode === 'die') renderDieCanvas();
       if (mode === '2d') render2DCanvas();
@@ -1973,21 +2017,28 @@
       link.click();
     }
 
-    window.addEventListener('resize', () => {
+    // 自適應視窗縮放處理
+    function handleResize() {
       const c = document.getElementById('viewport3d');
-      camera.aspect = c.clientWidth / c.clientHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(c.clientWidth, c.clientHeight);
+      if (c && renderer && camera) {
+        camera.aspect = c.clientWidth / c.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(c.clientWidth, c.clientHeight);
+      }
       if (currentView === 'die') renderDieCanvas();
       if (currentView === '2d') render2DCanvas();
       updateExportGuideBox();
-    });
+    }
+
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', () => setTimeout(handleResize, 150));
 
     window.onload = () => {
       init3D();
       selectProduct('p1');
       attachCanvasControls(document.getElementById('canvasDie'), 'die', renderDieCanvas);
       attachCanvasControls(document.getElementById('canvas2d'), 'plan2d', render2DCanvas);
+      setTimeout(handleResize, 100);
     };
   </script>
 </body>
