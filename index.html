@@ -209,6 +209,10 @@
       font-size: 12px;
       font-weight: 600;
     }
+    .tex-btns {
+      display: flex;
+      gap: 6px;
+    }
     .tex-controls {
       display: flex;
       flex-direction: column;
@@ -341,7 +345,6 @@
       margin-bottom: 12px;
     }
 
-    /* 行動裝置彈出相片檢視層 */
     #mobileExportModal {
       position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
       z-index: 999; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
@@ -451,7 +454,6 @@
       </div>
 
       <div class="panel-scroll" id="stepPanels">
-        <!-- 步驟 1: 品項與尺寸 + 專案保存區 (密碼 0411) -->
         <div id="step-0" class="step-content">
           <div class="project-auth-box">
             <div class="sec-h" style="margin-bottom:6px;">
@@ -529,7 +531,6 @@
           </div>
         </div>
 
-        <!-- 步驟 2: 紙材與工藝 -->
         <div id="step-1" class="step-content" style="display:none;">
           <div class="sec-h">材質紋理預設</div>
           <div class="grid-3" style="margin-bottom: 14px;">
@@ -551,7 +552,6 @@
           </div>
         </div>
 
-        <!-- 步驟 3: 部件貼圖 -->
         <div id="step-2" class="step-content" style="display:none;">
           <div class="sec-h">獨立部件圖稿替換與比例調整</div>
           <div id="uploadBoxContainer"></div>
@@ -559,7 +559,6 @@
           <p style="font-size: 11px; color: var(--muted); margin-top: 8px;">* 支援高解析 PNG/JPG。微調後 2D 與 3D 顯示保證等比一致。</p>
         </div>
 
-        <!-- 步驟 4: 光線與場景 -->
         <div id="step-3" class="step-content" style="display:none;">
           <div class="sec-h">攝影棚燈光氛圍</div>
           <div class="form-row">
@@ -593,7 +592,6 @@
           </div>
         </div>
 
-        <!-- 步驟 5: 輸出圖片 -->
         <div id="step-4" class="step-content" style="display:none;">
           <div class="sec-h">匯出規格與預覽</div>
           <div class="form-row">
@@ -625,7 +623,6 @@
       <canvas id="canvas2d"></canvas>
       <canvas id="canvasDie"></canvas>
       
-      <!-- 尺寸預覽虛線框 -->
       <div id="exportGuideBox">
         <div id="exportGuideTag">1:1 正方形範圍</div>
       </div>
@@ -741,7 +738,12 @@
       ctx.font = '24px sans-serif';
       ctx.fillText(sub, 90, 280);
       const tex = new THREE.CanvasTexture(c);
-      tex.userData = { rawImage: c, dataUrl: c.toDataURL(), transform: { scale: 1, offsetX: 0, offsetY: 0, rotate: 0, fit: 'cover' } };
+      tex.userData = { 
+        rawImage: c, 
+        dataUrl: c.toDataURL(), 
+        defaultRaw: c,
+        transform: { scale: 1, offsetX: 0, offsetY: 0, rotate: 0, fit: 'cover' } 
+      };
       return tex;
     }
 
@@ -771,7 +773,12 @@
       ctx.globalCompositeOperation = 'source-over';
 
       const tex = new THREE.CanvasTexture(c);
-      tex.userData = { rawImage: c, dataUrl: c.toDataURL(), transform: { scale: 1, offsetX: 0, offsetY: 0, rotate: 0, fit: 'cover' } };
+      tex.userData = { 
+        rawImage: c, 
+        dataUrl: c.toDataURL(), 
+        defaultRaw: c,
+        transform: { scale: 1, offsetX: 0, offsetY: 0, rotate: 0, fit: 'cover' } 
+      };
       return tex;
     }
 
@@ -804,7 +811,12 @@
       ctx.globalCompositeOperation = 'source-over';
 
       const tex = new THREE.CanvasTexture(c);
-      tex.userData = { rawImage: c, dataUrl: c.toDataURL(), transform: { scale: 1, offsetX: 0, offsetY: 0, rotate: 0, fit: 'cover' } };
+      tex.userData = { 
+        rawImage: c, 
+        dataUrl: c.toDataURL(), 
+        defaultRaw: c,
+        transform: { scale: 1, offsetX: 0, offsetY: 0, rotate: 0, fit: 'cover' } 
+      };
       return tex;
     }
 
@@ -820,7 +832,7 @@
         metalness: 0.05, roughness: 0.65, pos3D: { x: 0, y: 0, z: 0 }, pos2D: { x: 260, y: 180 },
         textures: { 
           front: makeArt('JEWEL', 'BOOKLET FRONT', '#2a3342'), 
-          booklet_back: makeArt('LYRICS', 'BOOKLET INSIDE', '#1c222c'),
+          booklet_inside: makeArt('LYRICS', 'BOOKLET INSIDE', '#1c222c'),
           back: makeArt('BACK INLAY', 'TRAY BACK', '#1f242e'), 
           disc: makeCDTexture() 
         }
@@ -843,7 +855,7 @@
     }
 
     // ==========================================
-    // 2. 3D 渲染系統 (柔和立體光影與真實反射)
+    // 2. 3D 渲染系統
     // ==========================================
     let scene, camera, renderer, controls, studioRoot, groundMesh;
     let keyLight, fillLight, rimLight, pmremGenerator;
@@ -878,7 +890,6 @@
       controls.panSpeed = 1.2;
       controls.maxPolarAngle = Math.PI / 2 + 0.02;
 
-      // 柔和光影佈置
       keyLight = new THREE.DirectionalLight(0xfff7ea, 1.1);
       keyLight.position.set(4, 12, 7);
       keyLight.castShadow = true;
@@ -997,14 +1008,12 @@
             map: p.textures.disc || makeVinylTexture(),
             metalness: 0.35, roughness: 0.25
           }));
-          disc.rotation.set(0, 0, 0);
           disc.position.set(0, 0, 0);
           disc.castShadow = shadowsEnabled; disc.receiveShadow = shadowsEnabled;
           disc.name = 'disc';
           jacket.add(disc);
         }
         else if (p.type === 'cd_jewel') {
-          // CD 寶麗盒：完全修正為外殼透明 + 不透明底卡與雙面歌詞本
           const baseGroup = new THREE.Group();
           baseGroup.position.y = h / 2;
           const acrylMat = new THREE.MeshPhysicalMaterial({ transmission: 0.95, opacity: 1, transparent: true, roughness: 0.04, ior: 1.5, thickness: 0.05 });
@@ -1014,17 +1023,17 @@
           bottomCase.position.z = -spine * 0.25;
           baseGroup.add(bottomCase);
 
-          // 1. 封底外側紙卡 Back Inlay (不透明)
+          // 封底紙卡外側 (不透明)
           const backInlay = new THREE.Mesh(new THREE.BoxGeometry(w * 0.98, h * 0.98, 0.005), backMat);
           backInlay.position.z = -spine * 0.22;
           baseGroup.add(backInlay);
 
-          // 黑色內托盤底座
-          const trayMesh = new THREE.Mesh(new THREE.BoxGeometry(w * 0.95, h * 0.95, spine * 0.12), new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.85 }));
+          // 托盤底座 (中性灰塑膠，無多餘藍色紙質)
+          const trayMesh = new THREE.Mesh(new THREE.BoxGeometry(w * 0.95, h * 0.95, spine * 0.12), new THREE.MeshStandardMaterial({ color: 0x1f232b, roughness: 0.7 }));
           trayMesh.position.z = -spine * 0.1;
           baseGroup.add(trayMesh);
 
-          // CD 光碟：嚴格置中幾何體
+          // CD 光碟：嚴格置中幾何 (0,0)
           const cdShape = new THREE.Shape();
           cdShape.absarc(0, 0, w * 0.42, 0, Math.PI * 2, false);
           const cdHole = new THREE.Path();
@@ -1049,11 +1058,15 @@
           lidMesh.position.set(w / 2, 0, 0);
           lidMesh.castShadow = shadowsEnabled;
 
-          // 2. 歌詞本 Booklet (雙面不透明實體：正面封面 + 內側封底)
-          const bookletBackMat = new THREE.MeshStandardMaterial({ map: p.textures.booklet_back || p.textures.front, metalness: p.metalness, roughness: p.roughness });
+          // 修正：正面朝外為封面 (frontMat)，打開後朝向內側為歌詞本內頁 (bookletInsideMat)
+          const bookletInsideMat = new THREE.MeshStandardMaterial({ 
+            map: p.textures.booklet_inside || p.textures.front, 
+            metalness: p.metalness, 
+            roughness: p.roughness 
+          });
           const booklet = new THREE.Mesh(
             new THREE.BoxGeometry(w * 0.94, h * 0.94, 0.006),
-            [backMat, backMat, backMat, backMat, bookletBackMat, frontMat] // 前後材質分離
+            [backMat, backMat, backMat, backMat, frontMat, bookletInsideMat]
           );
           booklet.position.set(w / 2, 0, -spine * 0.16);
           hingeGroup.add(lidMesh, booklet);
@@ -1144,12 +1157,17 @@
             pageHinge.position.set(0, standHeight - 0.01, halfBottom * 0.05 + k * 0.002);
             pageHinge.userData.index = k;
 
-            const pageTexture = (k === 0) ? p.textures.front : (p.textures['page_' + k] || p.textures.inside || frontMat.map);
-            const sheetMat = new THREE.MeshStandardMaterial({
-              map: pageTexture, metalness: p.metalness, roughness: p.roughness, side: THREE.DoubleSide
-            });
+            // 雙面獨立貼圖 (正面與背面)
+            const frontTex = (k === 0) ? p.textures.front : (p.textures['page_' + k + '_front'] || frontMat.map);
+            const backTex = p.textures['page_' + k + '_back'] || backMat.map;
 
-            const pageSheet = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.96, standHeight * 0.96), sheetMat);
+            const pageSheetMatFront = new THREE.MeshStandardMaterial({ map: frontTex, metalness: p.metalness, roughness: p.roughness });
+            const pageSheetMatBack = new THREE.MeshStandardMaterial({ map: backTex, metalness: p.metalness, roughness: p.roughness });
+
+            const pageSheet = new THREE.Mesh(
+              new THREE.BoxGeometry(w * 0.96, standHeight * 0.96, 0.003),
+              [backMat, backMat, backMat, backMat, pageSheetMatFront, pageSheetMatBack]
+            );
             pageSheet.rotation.x = slantAngle;
             pageSheet.position.set(0, -standHeight / 2, halfBottom / 2);
             pageSheet.castShadow = shadowsEnabled;
@@ -1177,10 +1195,17 @@
             pageHinge.position.set(0, 0, spine * 0.2 + k * 0.004);
             pageHinge.userData.index = k;
 
-            const pageTexture = (k === 0) ? p.textures.front : (p.textures['page_' + k] || p.textures.inside || frontMat.map);
-            const sheetMat = new THREE.MeshStandardMaterial({ map: pageTexture, metalness: p.metalness, roughness: p.roughness });
+            // 雙面獨立貼圖
+            const frontTex = (k === 0) ? p.textures.front : (p.textures['page_' + k + '_front'] || frontMat.map);
+            const backTex = p.textures['page_' + k + '_back'] || backMat.map;
 
-            const sheet = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.005), sheetMat);
+            const pageMatFront = new THREE.MeshStandardMaterial({ map: frontTex, metalness: p.metalness, roughness: p.roughness });
+            const pageMatBack = new THREE.MeshStandardMaterial({ map: backTex, metalness: p.metalness, roughness: p.roughness });
+
+            const sheet = new THREE.Mesh(
+              new THREE.BoxGeometry(w, h, 0.005),
+              [backMat, backMat, backMat, backMat, pageMatFront, pageMatBack]
+            );
             sheet.position.set(w / 2, 0, 0);
             sheet.castShadow = shadowsEnabled;
             pageHinge.add(sheet);
@@ -1225,6 +1250,7 @@
       if (itemGroup) {
         if (curr.type === 'vinyl') {
           const disc = itemGroup.getObjectByName('disc');
+          // 修正黑膠抽出位置與方向
           if (disc) disc.position.x = val * (curr.w / 100) * 0.85;
         }
         else if (curr.type === 'calendar_desk') {
@@ -1340,7 +1366,6 @@
         redrawFn();
       }, { passive: false });
 
-      // 手機觸控平移與雙指縮放
       canvas.addEventListener('touchstart', e => {
         if (e.touches.length === 1 && !drag2DItem) {
           isPanning = true;
@@ -1352,13 +1377,12 @@
       }, { passive: false });
 
       canvas.addEventListener('touchmove', e => {
+        e.preventDefault();
         if (isPanning && e.touches.length === 1 && !drag2DItem) {
-          e.preventDefault();
           viewTransform[viewKey].x = e.touches[0].clientX - startPos.x;
           viewTransform[viewKey].y = e.touches[0].clientY - startPos.y;
           redrawFn();
         } else if (e.touches.length === 2) {
-          e.preventDefault();
           const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
           if (lastTouchDist > 0) {
             const factor = dist / lastTouchDist;
@@ -1473,7 +1497,7 @@
 
       const openVal = parseFloat(document.getElementById('openSlider').value);
       const lightDeg = parseFloat(document.getElementById('lightAngle')?.value || 45);
-      const intensity = parseFloat(document.getElementById('lightIntensity')?.value || 1.8);
+      const intensity = parseFloat(document.getElementById('lightIntensity')?.value || 1.1);
       const rad = (lightDeg * Math.PI) / 180;
       const shadowDist = 16 + openVal * 12;
       const offsetX = Math.cos(rad) * shadowDist;
@@ -1492,6 +1516,7 @@
           ctx.shadowColor = 'transparent';
         }
 
+        // 黑膠唱片：修正 2D 抽出位置
         if (p.type === 'vinyl' && openVal > 0) {
           ctx.save();
           const slideX = p.w * openVal * 0.78;
@@ -1515,16 +1540,15 @@
           ctx.restore();
         }
 
+        // CD 寶麗盒 / Digipak：嚴格居中對齊
         if ((p.type === 'cd_jewel' || p.type === 'cd_digipak') && openVal > 0) {
           ctx.save();
           const slideX = p.w * openVal * 0.85;
           ctx.translate(slideX, 0);
 
-          // 繪製托盤底
           ctx.fillStyle = '#1c2438';
           ctx.fillRect(0, 0, p.w, p.h);
 
-          // 修正 CD 盤面正中對齊
           const rOut = p.w * 0.42;
           const rHole = p.w * 0.065;
           const cx = p.w / 2, cy = p.h / 2;
@@ -1560,7 +1584,6 @@
       ctx.restore();
     }
 
-    // 2D 畫布拖曳支援（滑鼠 + 手機觸控）
     let drag2DItem = null, offset2D = { x: 0, y: 0 };
     const cvs2D = document.getElementById('canvas2d');
 
@@ -1619,7 +1642,7 @@
     window.addEventListener('touchend', () => drag2DItem = null);
 
     // ==========================================
-    // 4. UI 介面與按鈕互動
+    // 4. UI 介面與按鈕互動 (新增恢復預設選項)
     // ==========================================
     function updateExportGuideBox() {
       const guideBox = document.getElementById('exportGuideBox');
@@ -1777,6 +1800,7 @@
       buildAll3DModels();
     }
 
+    // 支援獨立部件替換、重設預設，與筆記本/桌曆雙面頁面
     function syncUploadBoxes() {
       const p = getSelectedProduct();
       const container = document.getElementById('uploadBoxContainer');
@@ -1792,8 +1816,8 @@
       } else if (p.type === 'cd_jewel') {
         parts = [
           { key: 'front', label: '歌詞本封面 (正面遮蓋不透明)' },
-          { key: 'booklet_back', label: '歌詞本封底 / 內頁 (上殼內側開盒可見)' },
-          { key: 'back', label: '底盒外側背卡 (封底不透明)' },
+          { key: 'booklet_inside', label: '歌詞本內頁 (開蓋左側可見)' },
+          { key: 'back', label: '底盒背卡 (封底)' },
           { key: 'disc', label: 'CD 實體光碟盤面 (中心開孔)' }
         ];
       } else if (p.type === 'cd_digipak') {
@@ -1805,9 +1829,10 @@
         ];
       } else if (p.type === 'calendar_desk' || p.type === 'notebook') {
         const total = p.pages || 5;
-        parts = [{ key: 'front', label: '封面 (第 1 頁)' }];
+        parts = [{ key: 'front', label: '封面 (第 1 頁正面)' }];
         for (let i = 1; i < total; i++) {
-          parts.push({ key: 'page_' + i, label: `內頁 (第 ${i + 1} 頁)` });
+          parts.push({ key: 'page_' + i + '_front', label: `第 ${i + 1} 頁 (正面)` });
+          parts.push({ key: 'page_' + i + '_back', label: `第 ${i + 1} 頁 (背面)` });
         }
         parts.push({ key: 'back', label: '封底' });
       }
@@ -1821,7 +1846,10 @@
         box.innerHTML = `
           <div class="tex-header">
             <span>${pt.label}</span>
-            <button class="pill-btn" style="padding:3px 8px; font-size:11px;" onclick="triggerUpload('${pt.key}')">替換圖片</button>
+            <div class="tex-btns">
+              <button class="pill-btn" style="padding:3px 8px; font-size:11px;" onclick="resetTextureToDefault('${pt.key}')">恢復預設</button>
+              <button class="pill-btn" style="padding:3px 8px; font-size:11px;" onclick="triggerUpload('${pt.key}')">替換圖片</button>
+            </div>
           </div>
           <div class="tex-controls">
             <div class="tex-row">
@@ -1859,6 +1887,25 @@
       });
     }
 
+    // 恢復預設貼圖功能
+    function resetTextureToDefault(partKey) {
+      const p = getSelectedProduct();
+      const isDisc = (partKey === 'disc');
+      let defaultTex;
+
+      if (isDisc) {
+        defaultTex = (p.type === 'vinyl') ? makeVinylTexture() : makeCDTexture();
+      } else {
+        defaultTex = makeArt(p.type.toUpperCase(), partKey.toUpperCase(), '#1a2233');
+      }
+
+      p.textures[partKey] = defaultTex;
+      syncUploadBoxes();
+      buildAll3DModels();
+      if (currentView === 'die') renderDieCanvas();
+      if (currentView === '2d') render2DCanvas();
+    }
+
     function updateTextureTransform(partKey, prop, value) {
       const p = getSelectedProduct();
       const tex = p.textures[partKey];
@@ -1883,7 +1930,7 @@
       const presets = {
         vinyl: { w: 314, h: 314, spine: 6, r: 0, tex: { front: makeArt('MIDNIGHT', 'LUNA HARBOR', '#161c28'), back: makeArt('TRACKLIST', '1. Harbor Lights', '#1e2430'), disc: makeVinylTexture() } },
         cd_digipak: { w: 140, h: 125, spine: 8, r: 0, tex: { front: makeArt('DIGIPAK', 'SINGLE', '#232b36'), back: makeArt('LYRICS', 'BOOKLET', '#1a2233'), inside: makeArt('INSIDE', 'ART', '#28313e'), disc: makeCDTexture() } },
-        cd_jewel: { w: 142, h: 125, spine: 10, r: 2, tex: { front: makeArt('JEWEL', 'BOOKLET FRONT', '#2a3342'), booklet_back: makeArt('LYRICS', 'BOOKLET INSIDE', '#1c222c'), back: makeArt('BACK INLAY', 'TRAY BACK', '#1f242e'), disc: makeCDTexture() } },
+        cd_jewel: { w: 142, h: 125, spine: 10, r: 2, tex: { front: makeArt('JEWEL', 'BOOKLET FRONT', '#2a3342'), booklet_inside: makeArt('LYRICS', 'BOOKLET INSIDE', '#1c222c'), back: makeArt('BACK INLAY', 'TRAY BACK', '#1f242e'), disc: makeCDTexture() } },
         calendar_desk: { w: 150, h: 210, spine: 25, r: 0, pages: 5, tex: { front: makeArt('2027 CALENDAR', 'DESK EDITION', '#3a2e2b') } },
         notebook: { w: 148, h: 210, spine: 14, r: 4, pages: 5, tex: { front: makeArt('NOTEBOOK', 'JOURNAL', '#2e382b') } },
         photocard: { w: 55, h: 85, spine: 0.5, r: 4, tex: { front: makeArt('PHOTO', 'CARD', '#382228'), back: makeArt('AUTOGRAPH', 'SPECIAL', '#201618') } },
@@ -2092,7 +2139,6 @@
       if (currentView === '2d') render2DCanvas();
     }
 
-    // 手機與桌機通用匯出邏輯 (修復手機點擊無反應)
     function executeExport() {
       const ratio = parseFloat(document.getElementById('exportRatio').value);
       const format = document.getElementById('exportFormat').value;
@@ -2169,7 +2215,6 @@
         dataUrl = offCanvas.toDataURL(isPng ? 'image/png' : 'image/jpeg', 0.95);
       }
 
-      // 手機端相容處理：彈出圖片方便長按直接存至相簿
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       if (isMobile) {
         document.getElementById('mobileExportImg').src = dataUrl;
