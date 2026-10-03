@@ -341,6 +341,18 @@
       margin-bottom: 12px;
     }
 
+    /* 行動裝置彈出相片檢視層 */
+    #mobileExportModal {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
+      z-index: 999; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
+    }
+    #mobileExportModal img {
+      max-width: 90%; max-height: 70vh; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    #mobileExportModal p {
+      color: #fff; font-size: 13px; margin-top: 14px; font-weight: 600;
+    }
+
     @media (max-width: 900px) {
       html, body {
         overflow-y: auto !important;
@@ -564,7 +576,7 @@
           </div>
           <div class="form-row">
             <label>光源強度</label>
-            <input type="range" id="lightIntensity" min="0.2" max="3.5" step="0.1" value="2.0" oninput="updateLighting()">
+            <input type="range" id="lightIntensity" min="0.2" max="3.0" step="0.1" value="1.1" oninput="updateLighting()">
           </div>
 
           <div class="sec-h" style="margin-top: 14px;">背景與展台底色</div>
@@ -634,6 +646,11 @@
         </div>
       </div>
     </main>
+  </div>
+
+  <div id="mobileExportModal" onclick="this.style.display='none'">
+    <img id="mobileExportImg" src="" alt="打樣成品">
+    <p>長按圖片即可儲存至手機相簿（點擊任意處關閉）</p>
   </div>
 
   <script>
@@ -802,8 +819,8 @@
         id: 'p1', type: 'cd_jewel', w: 142, h: 125, spine: 10, radius: 2, pages: 1,
         metalness: 0.05, roughness: 0.65, pos3D: { x: 0, y: 0, z: 0 }, pos2D: { x: 260, y: 180 },
         textures: { 
-          front: makeArt('JEWEL', 'CASE FRONT', '#2a3342'), 
-          inlay_front: makeArt('INLAY', 'TRAY INSERT', '#161d26'),
+          front: makeArt('JEWEL', 'BOOKLET FRONT', '#2a3342'), 
+          booklet_back: makeArt('LYRICS', 'BOOKLET INSIDE', '#1c222c'),
           back: makeArt('BACK INLAY', 'TRAY BACK', '#1f242e'), 
           disc: makeCDTexture() 
         }
@@ -842,7 +859,7 @@
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.05;
+      renderer.toneMappingExposure = 0.9;
       container.appendChild(renderer.domElement);
 
       try {
@@ -861,7 +878,8 @@
       controls.panSpeed = 1.2;
       controls.maxPolarAngle = Math.PI / 2 + 0.02;
 
-      keyLight = new THREE.DirectionalLight(0xfff8ee, 2.2);
+      // 柔和光影佈置
+      keyLight = new THREE.DirectionalLight(0xfff7ea, 1.1);
       keyLight.position.set(4, 12, 7);
       keyLight.castShadow = true;
       keyLight.shadow.mapSize.set(2048, 2048);
@@ -869,15 +887,15 @@
       keyLight.shadow.radius = 3.5;
       scene.add(keyLight);
 
-      fillLight = new THREE.DirectionalLight(0xdce8ff, 1.1);
+      fillLight = new THREE.DirectionalLight(0xdce8ff, 0.6);
       fillLight.position.set(-6, 6, 2);
       scene.add(fillLight);
 
-      rimLight = new THREE.DirectionalLight(0xffffff, 1.2);
+      rimLight = new THREE.DirectionalLight(0xffffff, 0.8);
       rimLight.position.set(0, 8, -6);
       scene.add(rimLight);
 
-      scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+      scene.add(new THREE.AmbientLight(0xffffff, 0.45));
 
       const gGeo = new THREE.PlaneGeometry(80, 80);
       const gMat = new THREE.ShadowMaterial({ opacity: 0.28 });
@@ -958,7 +976,7 @@
 
         const frontMat = new THREE.MeshStandardMaterial({ map: p.textures.front, metalness: p.metalness, roughness: p.roughness });
         const backMat = new THREE.MeshStandardMaterial({ map: p.textures.back || p.textures.front, metalness: p.metalness, roughness: p.roughness });
-        const insideMat = new THREE.MeshStandardMaterial({ map: p.textures.inside || p.textures.inlay_front || p.textures.front, metalness: p.metalness, roughness: p.roughness });
+        const insideMat = new THREE.MeshStandardMaterial({ map: p.textures.inside || p.textures.front, metalness: p.metalness, roughness: p.roughness });
 
         if (p.type === 'vinyl') {
           const jacket = new THREE.Mesh(new THREE.BoxGeometry(w, h, spine), [backMat, backMat, backMat, backMat, frontMat, backMat]);
@@ -986,7 +1004,7 @@
           jacket.add(disc);
         }
         else if (p.type === 'cd_jewel') {
-          // CD 寶麗盒：完全修正為三件不透明層 + 透明壓克力硬盒
+          // CD 寶麗盒：完全修正為外殼透明 + 不透明底卡與雙面歌詞本
           const baseGroup = new THREE.Group();
           baseGroup.position.y = h / 2;
           const acrylMat = new THREE.MeshPhysicalMaterial({ transmission: 0.95, opacity: 1, transparent: true, roughness: 0.04, ior: 1.5, thickness: 0.05 });
@@ -1001,15 +1019,9 @@
           backInlay.position.z = -spine * 0.22;
           baseGroup.add(backInlay);
 
-          // 2. 封底內側紙卡 Inlay Front (托盤襯底插圖，可單獨替換)
-          const inlayFrontMat = new THREE.MeshStandardMaterial({ map: p.textures.inlay_front || p.textures.front, metalness: p.metalness, roughness: p.roughness });
-          const inlayFront = new THREE.Mesh(new THREE.BoxGeometry(w * 0.98, h * 0.98, 0.005), inlayFrontMat);
-          inlayFront.position.z = -spine * 0.12;
-          baseGroup.add(inlayFront);
-
           // 黑色內托盤底座
-          const trayMesh = new THREE.Mesh(new THREE.BoxGeometry(w * 0.95, h * 0.95, spine * 0.08), new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.85 }));
-          trayMesh.position.z = -spine * 0.08;
+          const trayMesh = new THREE.Mesh(new THREE.BoxGeometry(w * 0.95, h * 0.95, spine * 0.12), new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.85 }));
+          trayMesh.position.z = -spine * 0.1;
           baseGroup.add(trayMesh);
 
           // CD 光碟：嚴格置中幾何體
@@ -1037,8 +1049,12 @@
           lidMesh.position.set(w / 2, 0, 0);
           lidMesh.castShadow = shadowsEnabled;
 
-          // 3. 歌詞本 Booklet (正面遮蓋，不透明實體紙張)
-          const booklet = new THREE.Mesh(new THREE.BoxGeometry(w * 0.94, h * 0.94, 0.006), frontMat);
+          // 2. 歌詞本 Booklet (雙面不透明實體：正面封面 + 內側封底)
+          const bookletBackMat = new THREE.MeshStandardMaterial({ map: p.textures.booklet_back || p.textures.front, metalness: p.metalness, roughness: p.roughness });
+          const booklet = new THREE.Mesh(
+            new THREE.BoxGeometry(w * 0.94, h * 0.94, 0.006),
+            [backMat, backMat, backMat, backMat, bookletBackMat, frontMat] // 前後材質分離
+          );
           booklet.position.set(w / 2, 0, -spine * 0.16);
           hingeGroup.add(lidMesh, booklet);
 
@@ -1300,7 +1316,6 @@
       let isPanning = false, startPos = { x: 0, y: 0 };
       let lastTouchDist = 0;
 
-      // 滑鼠控制
       canvas.addEventListener('mousedown', e => {
         if (e.button === 1 || (e.button === 0 && !drag2DItem)) {
           isPanning = true;
@@ -1337,12 +1352,13 @@
       }, { passive: false });
 
       canvas.addEventListener('touchmove', e => {
-        e.preventDefault();
         if (isPanning && e.touches.length === 1 && !drag2DItem) {
+          e.preventDefault();
           viewTransform[viewKey].x = e.touches[0].clientX - startPos.x;
           viewTransform[viewKey].y = e.touches[0].clientY - startPos.y;
           redrawFn();
         } else if (e.touches.length === 2) {
+          e.preventDefault();
           const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
           if (lastTouchDist > 0) {
             const factor = dist / lastTouchDist;
@@ -1468,7 +1484,7 @@
         ctx.translate(p.pos2D.x, p.pos2D.y);
 
         if (shadowsEnabled) {
-          ctx.shadowColor = `rgba(0,0,0,${Math.min(0.24 * intensity, 0.6)})`;
+          ctx.shadowColor = `rgba(0,0,0,${Math.min(0.2 * intensity, 0.5)})`;
           ctx.shadowBlur = 24 + openVal * 12;
           ctx.shadowOffsetX = offsetX;
           ctx.shadowOffsetY = offsetY;
@@ -1504,14 +1520,11 @@
           const slideX = p.w * openVal * 0.85;
           ctx.translate(slideX, 0);
 
-          // 繪製托盤襯底 Inlay
-          if (p.textures.inlay_front && p.textures.inlay_front.image) {
-            ctx.drawImage(p.textures.inlay_front.image, 0, 0, p.w, p.h);
-          } else {
-            ctx.fillStyle = '#1c2438';
-            ctx.fillRect(0, 0, p.w, p.h);
-          }
+          // 繪製托盤底
+          ctx.fillStyle = '#1c2438';
+          ctx.fillRect(0, 0, p.w, p.h);
 
+          // 修正 CD 盤面正中對齊
           const rOut = p.w * 0.42;
           const rHole = p.w * 0.065;
           const cx = p.w / 2, cy = p.h / 2;
@@ -1779,8 +1792,8 @@
       } else if (p.type === 'cd_jewel') {
         parts = [
           { key: 'front', label: '歌詞本封面 (正面遮蓋不透明)' },
-          { key: 'inlay_front', label: '封底底卡內頁 (托盤襯底插圖)' },
-          { key: 'back', label: '封底底卡外頁 (底盒外側背卡)' },
+          { key: 'booklet_back', label: '歌詞本封底 / 內頁 (上殼內側開盒可見)' },
+          { key: 'back', label: '底盒外側背卡 (封底不透明)' },
           { key: 'disc', label: 'CD 實體光碟盤面 (中心開孔)' }
         ];
       } else if (p.type === 'cd_digipak') {
@@ -1870,7 +1883,7 @@
       const presets = {
         vinyl: { w: 314, h: 314, spine: 6, r: 0, tex: { front: makeArt('MIDNIGHT', 'LUNA HARBOR', '#161c28'), back: makeArt('TRACKLIST', '1. Harbor Lights', '#1e2430'), disc: makeVinylTexture() } },
         cd_digipak: { w: 140, h: 125, spine: 8, r: 0, tex: { front: makeArt('DIGIPAK', 'SINGLE', '#232b36'), back: makeArt('LYRICS', 'BOOKLET', '#1a2233'), inside: makeArt('INSIDE', 'ART', '#28313e'), disc: makeCDTexture() } },
-        cd_jewel: { w: 142, h: 125, spine: 10, r: 2, tex: { front: makeArt('JEWEL', 'CASE FRONT', '#2a3342'), inlay_front: makeArt('INLAY', 'TRAY INSERT', '#161d26'), back: makeArt('BACK INLAY', 'TRAY BACK', '#1f242e'), disc: makeCDTexture() } },
+        cd_jewel: { w: 142, h: 125, spine: 10, r: 2, tex: { front: makeArt('JEWEL', 'BOOKLET FRONT', '#2a3342'), booklet_back: makeArt('LYRICS', 'BOOKLET INSIDE', '#1c222c'), back: makeArt('BACK INLAY', 'TRAY BACK', '#1f242e'), disc: makeCDTexture() } },
         calendar_desk: { w: 150, h: 210, spine: 25, r: 0, pages: 5, tex: { front: makeArt('2027 CALENDAR', 'DESK EDITION', '#3a2e2b') } },
         notebook: { w: 148, h: 210, spine: 14, r: 4, pages: 5, tex: { front: makeArt('NOTEBOOK', 'JOURNAL', '#2e382b') } },
         photocard: { w: 55, h: 85, spine: 0.5, r: 4, tex: { front: makeArt('PHOTO', 'CARD', '#382228'), back: makeArt('AUTOGRAPH', 'SPECIAL', '#201618') } },
@@ -2018,22 +2031,23 @@
       if (type === 'studio') {
         keyLight.position.set(4, 12, 7);
         keyLight.color.setHex(0xfff8ee);
-        keyLight.intensity = 2.2;
+        keyLight.intensity = 1.1;
         fillLight.position.set(-6, 6, 2);
-        fillLight.intensity = 1.1;
-        rimLight.intensity = 1.2;
+        fillLight.intensity = 0.6;
+        rimLight.intensity = 0.8;
       } else if (type === 'rim') {
         keyLight.position.set(2, 6, -7);
         keyLight.color.setHex(0xdce6ff);
-        keyLight.intensity = 2.5;
+        keyLight.intensity = 1.4;
         fillLight.position.set(7, 4, 3);
-        fillLight.intensity = 0.5;
-        rimLight.intensity = 2.2;
+        fillLight.intensity = 0.3;
+        rimLight.intensity = 1.6;
       } else if (type === 'dramatic') {
         keyLight.position.set(0, 14, 2);
         keyLight.color.setHex(0xffffff);
-        keyLight.intensity = 3.2;
-        fillLight.intensity = 0.2;
+        keyLight.intensity = 1.8;
+        fillLight.position.set(-3, 2, 0);
+        fillLight.intensity = 0.1;
         rimLight.intensity = 0.4;
       }
       document.getElementById('lightIntensity').value = keyLight.intensity;
@@ -2072,12 +2086,13 @@
 
     function updateLighting() {
       const ang = (parseFloat(document.getElementById('lightAngle').value) * Math.PI) / 180;
-      const intensity = parseFloat(document.getElementById('lightIntensity').value || 1.8);
+      const intensity = parseFloat(document.getElementById('lightIntensity').value || 1.1);
       keyLight.position.set(Math.cos(ang) * 7, 10, Math.sin(ang) * 7);
       keyLight.intensity = intensity;
       if (currentView === '2d') render2DCanvas();
     }
 
+    // 手機與桌機通用匯出邏輯 (修復手機點擊無反應)
     function executeExport() {
       const ratio = parseFloat(document.getElementById('exportRatio').value);
       const format = document.getElementById('exportFormat').value;
@@ -2086,9 +2101,7 @@
 
       let outW = 2048;
       let outH = Math.round(outW / ratio);
-
-      const link = document.createElement('a');
-      link.download = `zy-打樣成品-${Date.now()}.${isPng ? 'png' : 'jpg'}`;
+      let dataUrl = '';
 
       if (currentView === '3d') {
         const guideBox = document.getElementById('exportGuideBox');
@@ -2116,7 +2129,7 @@
         }
 
         renderer.render(scene, camera);
-        link.href = renderer.domElement.toDataURL(isPng ? 'image/png' : 'image/jpeg', 0.95);
+        dataUrl = renderer.domElement.toDataURL(isPng ? 'image/png' : 'image/jpeg', 0.95);
 
         camera.clearViewOffset();
         camera.aspect = origAspect;
@@ -2129,7 +2142,7 @@
         groundMesh.visible = shadowsEnabled && currentBgMode !== 'transparent';
         renderer.setClearColor(currentBgMode === 'transparent' ? 0x000000 : (currentBgMode === 'pure_white' ? 0xffffff : 0xe3e5e8), currentBgMode === 'transparent' ? 0 : 1);
       } else if (currentView === 'die') {
-        link.href = document.getElementById('canvasDie').toDataURL(isPng ? 'image/png' : 'image/jpeg', 0.95);
+        dataUrl = document.getElementById('canvasDie').toDataURL(isPng ? 'image/png' : 'image/jpeg', 0.95);
       } else {
         let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
         products.forEach(p => {
@@ -2153,10 +2166,20 @@
         const shiftY = outH / 2 - cy * scale;
 
         render2DCanvas(offCtx, outW, outH, isTransparent, { x: shiftX, y: shiftY, scale: scale });
-        link.href = offCanvas.toDataURL(isPng ? 'image/png' : 'image/jpeg', 0.95);
+        dataUrl = offCanvas.toDataURL(isPng ? 'image/png' : 'image/jpeg', 0.95);
       }
 
-      link.click();
+      // 手機端相容處理：彈出圖片方便長按直接存至相簿
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (isMobile) {
+        document.getElementById('mobileExportImg').src = dataUrl;
+        document.getElementById('mobileExportModal').style.display = 'flex';
+      } else {
+        const link = document.createElement('a');
+        link.download = `zy-打樣成品-${Date.now()}.${isPng ? 'png' : 'jpg'}`;
+        link.href = dataUrl;
+        link.click();
+      }
     }
 
     function handleResize() {
